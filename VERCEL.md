@@ -32,7 +32,7 @@ Migrations run in the Vercel build (`npm run build` → `scripts/migrate.mjs`).
 2. **Vercel → project tadex-hub → Settings → Domains:** add `tadexhub.com` and `www.tadexhub.com`
    (redirect `www` → apex). Vercel shows "Invalid configuration" until DNS changes.
 3. **GitHub Pages:** AFTER the DNS change, remove the custom domain:
-   `gh api -X PUT repos/tadex123/tadex-landing/pages -F cname=` (or Settings → Pages → Custom domain → Remove)
+   `echo '{"cname":null}' | gh api -X PUT repos/tadex123/tadex-landing/pages --input -` (or Settings → Pages → Custom domain → Remove)
    so GitHub stops claiming the domain. Optionally merge `vercel` into `main` and connect the repo to the project.
 4. **DNS at Spaceship (tadexhub.com → Advanced DNS):**
    - Delete the 4 GitHub Pages `A @` records: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`.

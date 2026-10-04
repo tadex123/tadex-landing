@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/kalkulator",
+      "destination": "https://tadex-kalkulator.vercel.app/kalkulator"
+    },
+    {
+      "source": "/kalkulator/",
+      "destination": "https://tadex-kalkulator.vercel.app/kalkulator/"
+    },
+    {
+      "source": "/kalkulator/:path+",
+      "destination": "https://tadex-kalkulator.vercel.app/kalkulator/:path+"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ]
+}

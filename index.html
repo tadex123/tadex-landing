@@ -17,80 +17,56 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-:root{--sky:#8FD3F5;--blue:#4FB3E8;--blue-m:#2A93CC;--blue-d:#1E78B8;--deep:#0E4C80;--blue-l:#E8F6FD;--navy:#0F2A44;--muted:#4A6178;--line:#D6ECF8}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--navy);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden}
-a{color:inherit}
-.wrap{max-width:1120px;margin:0 auto;padding:0 24px;width:100%}
-header{position:absolute;top:0;left:0;right:0;z-index:5}
-.bar{display:flex;align-items:center;justify-content:space-between;height:76px}
-.mark{font-weight:900;font-size:1.45rem;letter-spacing:.12em;text-decoration:none;color:#fff;display:flex;align-items:baseline;gap:8px}
-.mark b{font-weight:900}.mark span{color:var(--sky)}
-.mark small{font-size:.8rem;font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.75)}
-.pill{color:var(--deep);background:#fff;padding:9px 18px;border-radius:999px;font-weight:600;font-size:.95rem;text-decoration:none;transition:transform .2s,box-shadow .2s}
-.pill:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(14,76,128,.35)}
-.hero{position:relative;flex:1;overflow:hidden;color:#fff;
- background:linear-gradient(125deg,var(--deep) 0%,var(--blue-d) 35%,var(--blue) 70%,var(--sky) 100%);
- background-size:200% 200%;animation:flow 16s ease-in-out infinite;padding:150px 0 110px}
-@keyframes flow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;pointer-events:none}
-.b1{width:420px;height:420px;background:var(--sky);top:-120px;right:-80px;animation:drift 14s ease-in-out infinite}
-.b2{width:360px;height:360px;background:var(--deep);bottom:-140px;left:-100px;animation:drift 18s ease-in-out infinite reverse}
-.b3{width:220px;height:220px;background:#fff;opacity:.18;top:40%;left:55%;animation:drift 20s ease-in-out infinite}
-@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,30px)}}
-.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%);pointer-events:none}
-.inner{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);font-weight:600;font-size:.85rem;padding:6px 14px;border-radius:999px;margin-bottom:22px;backdrop-filter:blur(6px)}
-.dot{width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,.7);animation:pulse 2s infinite}
-@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
-h1{font-size:clamp(2.4rem,6vw,4.4rem);line-height:1.05;font-weight:900;letter-spacing:-.025em}
-h1 .hl{background:linear-gradient(90deg,#fff,var(--blue-l) 40%,var(--sky));-webkit-background-clip:text;background-clip:text;color:transparent}
-.sub{font-size:clamp(1.05rem,2vw,1.3rem);color:rgba(255,255,255,.88);margin-top:20px;max-width:520px}
-.card{background:rgba(255,255,255,.96);color:var(--navy);border-radius:24px;padding:40px 34px;box-shadow:0 30px 60px rgba(14,76,128,.35);border:1px solid rgba(255,255,255,.6);transition:transform .3s}
-.card:hover{transform:translateY(-4px)}
-.lock{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),var(--blue-d));margin-bottom:20px;box-shadow:0 10px 24px rgba(30,120,184,.35)}
-.lock svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.card h2{font-size:1.7rem;font-weight:800;letter-spacing:-.01em;line-height:1.2}
-.card p{color:var(--muted);margin-top:8px}
-.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:26px;padding:16px 24px;border-radius:14px;font-weight:700;font-size:1.05rem;text-decoration:none;color:#fff;
- background:linear-gradient(90deg,var(--blue-d),var(--blue),var(--blue-d));background-size:200% 100%;box-shadow:0 12px 28px rgba(30,120,184,.4);transition:background-position .5s,transform .2s,box-shadow .2s}
-.btn:hover{background-position:100% 0;transform:translateY(-2px);box-shadow:0 16px 34px rgba(30,120,184,.5)}
-.btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;transition:transform .2s}
-.btn:hover svg{transform:translateX(4px)}
-.note{font-size:.9rem;text-align:center;margin-top:16px!important}
-footer{background:var(--navy);color:#C9DCEB;padding:28px 0;font-size:.92rem}
-.foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
-footer a{color:#fff;text-decoration:none;font-weight:500}
-footer a:hover{color:var(--blue)}
-@media (max-width:860px){.inner{grid-template-columns:1fr;gap:36px}.hero{padding:120px 0 72px}}
-@media (max-width:600px){.mark small{display:none}.card{padding:32px 22px}.foot{flex-direction:column;text-align:center}.b1{width:280px;height:280px}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
+<link rel="stylesheet" href="styles.css">
+<script type="module" src="app.js"></script>
 </head>
-<body>
+<body class="booting" data-state="out">
 <header>
  <div class="wrap bar">
-  <a class="mark" href="/" aria-label="TADEX Hub home"><b>TADE<span>X</span></b><small>Hub</small></a>
-  <a class="pill" href="/login/">Team login</a>
+  <a class="logo" href="/" aria-label="TADEX Hub home"><img src="assets/tadex-logo.png" alt="Tadex Group" width="350" height="100"></a>
+  <a class="pill out-only" href="#signin">Team login</a>
+  <div class="chip in-only">
+   <span class="avatar" id="chip-initial" aria-hidden="true"></span>
+   <span class="chip-email" id="chip-email"></span>
+   <a href="#admin" id="admin-link" class="chip-link" hidden>Admin</a>
+   <a href="#" id="signout" class="chip-link">Sign out</a>
+  </div>
  </div>
 </header>
 
 <main class="hero">
  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grid-bg"></div>
  <div class="wrap inner">
-  <div>
+  <div class="greet">
    <span class="eyebrow"><span class="dot"></span>Dobrodošli, tim TADEX</span>
    <h1>Welcome back,<br><span class="hl">TADEX team</span></h1>
-   <p class="sub">Good to see you. This is your team space. Sign in to pick up where you left off.</p>
+   <p class="sub" id="sub">Good to see you. This is your team space. Sign in to pick up where you left off.</p>
+   <span class="preview-flag" id="preview-flag" hidden>Preview · sample data</span>
   </div>
-  <section class="card" aria-labelledby="signin">
+
+  <section class="card out-only" id="signin" aria-labelledby="form-title">
    <div class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-   <h2 id="signin">Sign in to continue</h2>
-   <p>Use your TADEX account.</p>
-   <a class="btn" href="/login/">Sign in <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-   <p class="note">No access yet? Contact your admin.</p>
+   <h2 id="form-title">Sign in</h2>
+   <form id="form" novalidate>
+    <label class="field"><span>Email</span>
+     <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
+    <label class="field"><span>Password</span>
+     <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required></label>
+    <button class="btn" id="submit" type="submit"><span id="submit-label">Sign in</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+   </form>
+   <p class="switch"><span id="toggle-lead">No account yet?</span> <a href="#" id="toggle">Request access</a></p>
+   <p class="note">New accounts need approval from the admin before access is granted.</p>
+  </section>
+
+  <section class="panel apps-only" aria-labelledby="apps-title">
+   <h2 id="apps-title">Your apps</h2>
+   <div class="apps" id="apps-grid"></div>
+  </section>
+
+  <section class="panel admin-only" aria-labelledby="admin-title">
+   <div class="panel-head"><h2 id="admin-title">Admin</h2><a href="#" class="back" onclick="location.hash='';return false">← Your apps</a></div>
+   <div id="admin-body"></div>
   </section>
  </div>
 </main>
@@ -98,8 +74,9 @@ footer a:hover{color:var(--blue)}
 <footer>
  <div class="wrap foot">
   <span>© 2026 TADEX Group · tadexhub.com</span>
-  <a href="/login/">Team login →</a>
+  <a href="#signin" class="out-only">Team login →</a>
  </div>
 </footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

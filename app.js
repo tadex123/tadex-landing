@@ -167,10 +167,14 @@ async function init() {
   window.addEventListener("hashchange", route);
   if (auth.previewMode) $("#preview-flag").hidden = false;
   setMode("signin");
+  let redirect = null;
   try {
     session = await auth.getSession();
+    redirect = auth.consumeAuthRedirect();
+    if (!session && redirect) setStatus(redirect.kind === "error" ? redirect.message : "Your email is confirmed. You can sign in now.", redirect.kind === "error" ? "error" : "ok");
   } catch (err) {
     session = null;
+    auth.consumeAuthRedirect();
     setStatus(err.message, err.code === "pending" ? "warn" : "error");
   }
   if (session) renderSignedIn(); else setState("out");

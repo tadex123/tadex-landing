@@ -16,10 +16,36 @@ export class AuthError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
 
+// Capture what Supabase put in the URL after an email-confirmation link, before supabase-js consumes it.
+const _hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+const _query = new URLSearchParams(location.search);
+const _redirect = (() => {
+  const err = _hash.get("error_description") || _query.get("error_description");
+  const code = _hash.get("error_code") || _query.get("error_code");
+  if (err || code) {
+    return { kind: "error", message: code === "otp_expired"
+      ? "This confirmation link has expired or was already used. Try signing in, or request access again."
+      : "That link didn't work: " + (err || code).replace(/\+/g, " ") };
+  }
+  const type = _hash.get("type") || _query.get("type");
+  if (_hash.get("access_token") && (type === "signup" || type === "email" || type === "invite")) return { kind: "confirmed" };
+  return null;
+})();
+
+/** Info about an auth redirect in the URL (email confirmation), or null. Cleans the URL. */
+export function consumeAuthRedirect() {
+  if (_redirect || _hash.get("access_token") || _hash.get("error")) {
+    history.replaceState(null, "", location.pathname + (previewParam() ? location.search : ""));
+  }
+  return _redirect;
+}
+function previewParam() { return new URLSearchParams(location.search).get("preview"); }
+
 const MSG = {
   notConnected: "Sign-in is not connected yet.",
   requestNotConnected: "Requesting access is not connected yet.",
   pending: "Your account is waiting for approval.",
+  confirmedPending: "Your email is confirmed. Your account is waiting for approval.",
 };
 
 // ---------- Supabase client (lazy) ----------
@@ -28,7 +54,7 @@ function sb() {
   if (!isConfigured) return Promise.reject(new AuthError("not_connected", MSG.notConnected));
   if (!clientPromise) {
     clientPromise = import(SUPABASE_CDN).then(({ createClient }) =>
-      createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } })
+      createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" } })
     );
   }
   return clientPromise;
@@ -48,6 +74,7 @@ function friendly(error) {
   if (/email not confirmed/i.test(m)) return "Please confirm your email first, then sign in.";
   if (/already registered/i.test(m)) return "This email already has an account. Try signing in.";
   if (/password/i.test(m) && /(at least|characters|weak)/i.test(m)) return m;
+  if (/not authori[sz]ed/i.test(m) || /error sending/i.test(m)) return "We couldn't send the confirmation email right now. Please contact your admin.";
   if (/rate limit/i.test(m)) return "Too many attempts. Please wait a moment and try again.";
   return m || "Something went wrong. Please try again.";
 }
@@ -80,7 +107,7 @@ export async function getSession() {
   const profile = await fetchProfile(client, user.id);
   if (!profile || !profile.approved) {
     await client.auth.signOut();
-    throw new AuthError("pending", MSG.pending);
+    throw new AuthError("pending", _redirect && _redirect.kind === "confirmed" ? MSG.confirmedPending : MSG.pending);
   }
   return { user: { id: user.id, email: user.email }, profile };
 }

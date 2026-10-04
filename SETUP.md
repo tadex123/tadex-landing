@@ -1,6 +1,8 @@
 # TADEX Hub: connecting the sign-in (Supabase)
 
-The hub has its own accounts, separate from the app accounts. Until `config.js` is filled in, the sign-in form shows "Sign-in is not connected yet".
+The hub has its own accounts, separate from the app accounts.
+
+**Status (Oct 4, 2026):** connected to Supabase project `tadex-hub` (ref `ichcxptnnzakwzlmixvk`, eu-central-1). Steps 1–5 are done. `setup.sql` has been applied, and `config.js` holds the project URL and the publishable (anon) key. Owner admins are automatic, see below.
 
 ## Steps
 
@@ -14,7 +16,7 @@ The hub has its own accounts, separate from the app accounts. Until `config.js` 
    export const SUPABASE_ANON_KEY = "eyJ...";
    ```
    The anon key is meant to be public. Never put the `service_role` key in this repo.
-6. **Make yourself admin.** Use **Request access** on tadexhub.com with your email. Then, in the SQL Editor, put your email into the last statement of `setup.sql` and run only that statement.
+6. **Owner admins (automatic).** `tadijasaric92@gmail.com` and `info@tadextrade.com` (listed in `public.hub_owner_emails()`) become admin + approved with all apps as soon as they request access **and confirm their email**. To change the list, edit `hub_owner_emails()` in `setup.sql` and re-run it.
 7. Commit and push `config.js`. Sign in and use **Admin** in the header to approve people and tick which apps each person sees.
 
 ## How access works
@@ -22,6 +24,10 @@ The hub has its own accounts, separate from the app accounts. Until `config.js` 
 - `profiles.approved`: users can't sign in until this is true.
 - `profiles.apps`: the app ids a person sees (`calculator`, `app2`).
 - `profiles.is_admin`: shows the Admin panel. It can only be changed in the SQL Editor.
+
+## Email sending
+
+Supabase's built-in email sender only delivers to the project's team members and is limited to a few emails per hour. For co-workers to receive confirmation emails, set up custom SMTP under **Authentication → Emails → SMTP Settings** (e.g. Resend or Brevo, both have free plans).
 
 ## Previews (only while not connected)
 

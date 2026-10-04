@@ -21,10 +21,17 @@ set search_path = public
 as $$
   select coalesce((select p.is_admin from public.profiles p where p.id = auth.uid()), false);
 $$;
-revoke all on function public.is_admin() from public;
+revoke all on function public.is_admin() from public, anon;
 grant execute on function public.is_admin() to authenticated;
 
--- 3) Create a profile automatically on sign-up (unapproved, no apps)
+-- 3) Create a profile automatically on sign-up (unapproved, no apps).
+--    Owner rule: the hub owner emails (see hub_owner_emails) become admin + approved with all apps,
+--    but only once that email address is CONFIRMED (so nobody can claim it by just signing up with it).
+create or replace function public.hub_owner_emails()
+returns text[] language sql immutable as $$
+  select array['tadijasaric92@gmail.com', 'info@tadextrade.com']::text[]
+$$;
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql security definer
@@ -34,6 +41,9 @@ begin
   insert into public.profiles (id, email)
   values (new.id, new.email)
   on conflict (id) do nothing;
+  if lower(new.email) = any (public.hub_owner_emails()) and new.email_confirmed_at is not null then
+    update public.profiles set approved = true, is_admin = true, apps = array['calculator','app2'] where id = new.id;
+  end if;
   return new;
 end;
 $$;
@@ -42,6 +52,26 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- When an owner confirms their email, promote them.
+create or replace function public.handle_user_confirmed()
+returns trigger
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  if lower(new.email) = any (public.hub_owner_emails())
+     and new.email_confirmed_at is not null and old.email_confirmed_at is null then
+    update public.profiles set approved = true, is_admin = true, apps = array['calculator','app2'] where id = new.id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_confirmed on auth.users;
+create trigger on_auth_user_confirmed
+  after update of email_confirmed_at on auth.users
+  for each row execute function public.handle_user_confirmed();
 
 -- 4) Row Level Security
 drop policy if exists "profiles: read own or admin reads all" on public.profiles;
@@ -61,8 +91,8 @@ create policy "profiles: admins update"
 -- Non-admins have no update policy at all, so they can't change approved / is_admin / apps.
 
 -- 5) Table privileges (defence in depth on top of RLS)
-revoke all on public.profiles from anon;
-revoke insert, update, delete on public.profiles from authenticated;
+-- Revoke everything first (Supabase grants ALL incl. TRUNCATE by default, and RLS does not apply to TRUNCATE).
+revoke all on public.profiles from anon, authenticated;
 grant select on public.profiles to authenticated;
 -- Admins may change only these columns from the app. is_admin can only be changed here in the SQL Editor.
 grant update (approved, apps) on public.profiles to authenticated;
@@ -84,7 +114,18 @@ create trigger profiles_guard_self_revoke
   before update on public.profiles
   for each row execute function public.guard_self_revoke();
 
--- 7) Make Tadija admin. First request access on tadexhub.com with this email, then run:
-update public.profiles
+-- Trigger functions are not meant to be called directly
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+revoke all on function public.guard_self_revoke() from public, anon, authenticated;
+revoke all on function public.handle_user_confirmed() from public, anon, authenticated;
+revoke all on function public.hub_owner_emails() from public, anon, authenticated;
+drop function if exists public.hub_owner_email();  -- replaced by hub_owner_emails()
+
+-- 7) Owner admins: handled automatically by the triggers above once an address in
+--    hub_owner_emails() (tadijasaric92@gmail.com, info@tadextrade.com) signs up and confirms the email. If the account already exists and is confirmed, this catches it up:
+update public.profiles p
    set approved = true, is_admin = true, apps = array['calculator', 'app2']
- where email = 'REPLACE_WITH_TADIJA_EMAIL';
+  from auth.users u
+ where u.id = p.id
+   and lower(u.email) = any (public.hub_owner_emails())
+   and u.email_confirmed_at is not null;

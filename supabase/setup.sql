@@ -193,3 +193,27 @@ as $$
 $$;
 revoke all on function public.crm_people() from public, anon;
 grant execute on function public.crm_people() to authenticated;
+
+-- 1f) Teams (approved suggestion 3, 4. 10. 2026): hub Admin assigns each Operator to ONE Direktor.
+--     profiles.direktor_id = the Direktor's profile id (null = no team). A Direktor's default view in
+--     Povijest kalkulacija and the CRM is their team; they can switch to "Svi" (everyone).
+--     Only hub admins can set it (column grant + the existing "admins update" policy).
+--     hub_my_team(): the caller's own team only (approved people whose direktor_id = caller).
+alter table public.profiles add column if not exists direktor_id uuid references public.profiles (id) on delete set null;
+alter table public.profiles drop constraint if exists profiles_direktor_not_self;
+alter table public.profiles add constraint profiles_direktor_not_self check (direktor_id is null or direktor_id <> id);
+grant update (approved, apps, app_roles, rank, app_perms, direktor_id) on public.profiles to authenticated;
+
+create or replace function public.hub_my_team()
+returns table (id uuid, email text, full_name text)
+language sql stable security definer
+set search_path = public
+as $$
+  select p.id, p.email, p.full_name
+    from public.profiles p
+   where p.direktor_id = auth.uid() and p.approved
+     and exists (select 1 from public.profiles me where me.id = auth.uid() and me.approved)
+   order by p.full_name, p.email;
+$$;
+revoke all on function public.hub_my_team() from public, anon;
+grant execute on function public.hub_my_team() to authenticated;

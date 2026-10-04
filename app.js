@@ -23,6 +23,9 @@ const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", lab
 const ROLE_CHOICES = [["admin", "Admin"], ["direktor", "Direktor"], ["operator", "Operator"]];
 const APP_ROLES = { calculator: ROLE_CHOICES, app2: ROLE_CHOICES, crm: ROLE_CHOICES };
 const DEFAULT_ROLE = "operator";
+// Teams: each Operator belongs to at most ONE Direktor (profiles.direktor_id). A Direktor's default view in
+// Povijest kalkulacija and the CRM is their team (+ own); they can switch to "Svi". Admin sees everything.
+const isDirektor = u => Object.values(u.app_roles || {}).includes("direktor");
 const defaultRole = () => DEFAULT_ROLE;
 
 // Calculator permission toggles (same keys as the calculator's company policy). Labels/defaults are
@@ -173,6 +176,21 @@ function renderApps() {
   grid.querySelectorAll("[data-placeholder]").forEach(el => el.addEventListener("click", e => e.preventDefault()));
 }
 
+/** Team picker: which Direktor this person reports to (one per person). Direktors and admins lead, not join. */
+function teamCell(u, users) {
+  const leads = users.filter(x => x.id !== u.id && x.approved && isDirektor(x));
+  if (u.is_admin) return '<span class="muted small">Admin — sees all</span>';
+  if (isDirektor(u) && !u.direktor_id) {
+    const n = users.filter(x => x.direktor_id === u.id).length;
+    return `<span class="muted small">Direktor · team: ${n}</span>`;
+  }
+  if (!leads.length) return '<span class="muted small">No Direktor yet</span>';
+  return `<select class="app-role" data-direktor aria-label="Team (Direktor)">
+    <option value="">— none —</option>
+    ${leads.map(d => `<option value="${esc(d.id)}" ${u.direktor_id === d.id ? "selected" : ""}>${esc(d.full_name || d.email)}</option>`).join("")}
+  </select>`;
+}
+
 async function renderAdmin() {
   const body = $("#admin-body");
   body.innerHTML = '<p class="muted">Loading users…</p>';
@@ -181,7 +199,7 @@ async function renderAdmin() {
     if (!users.length) { body.innerHTML = '<p class="muted">No users yet.</p>'; return; }
     body.innerHTML = `
       <table class="users">
-        <thead><tr><th>Person</th><th>Rank</th><th>Hub role</th><th>Requested</th><th>Status</th><th>Apps</th><th><span class="sr">Action</span></th></tr></thead>
+        <thead><tr><th>Person</th><th>Rank</th><th>Hub role</th><th>Requested</th><th>Status</th><th>Apps</th><th>Team (Direktor)</th><th><span class="sr">Action</span></th></tr></thead>
         <tbody>${users.map(u => {
           const self = u.id === session.user.id;
           return `<tr data-id="${esc(u.id)}">
@@ -197,6 +215,7 @@ async function renderAdmin() {
               <select class="app-role" data-role-for="${a.id}" aria-label="${esc(a.label)} role" ${on ? "" : "disabled"}>${APP_ROLES[a.id].map(([v, l]) =>
                 `<option value="${v}" ${v === role ? "selected" : ""}>${l}</option>`).join("")}</select>
                 ${a.noPerms ? "" : `<button type="button" class="perms-btn" data-perms="${a.id}" ${on ? "" : "disabled"}>Permissions${Object.keys(((u.app_perms || {})[a.id]) || {}).length ? " •" : ""}</button>`}</div>`; }).join("")}</div></td>
+            <td data-k="Team (Direktor)">${teamCell(u, users)}</td>
             <td class="act">${self ? '<span class="muted small">You</span>' :
               `<button class="ab ${u.approved ? "revoke" : "approve"}" data-approved="${u.approved ? 1 : 0}">${u.approved ? "Revoke" : "Approve"}</button>`}</td>
           </tr>`; }).join("")}</tbody>
@@ -228,6 +247,14 @@ async function renderAdmin() {
         catch (e) { cb.checked = !cb.checked; toast(e.message, true); }
         finally { cb.disabled = false; }
       }));
+      const team = tr.querySelector("select[data-direktor]");
+      if (team) team.addEventListener("change", async () => {
+        const before = current.direktor_id || "";
+        team.disabled = true;
+        try { const saved = await auth.updateUser(id, { direktor_id: team.value || null }); current.direktor_id = saved.direktor_id; toast("Saved"); renderAdmin(); }
+        catch (e) { team.value = before; toast(e.message, true); }
+        finally { team.disabled = false; }
+      });
       const rank = tr.querySelector("input[data-rank]");
       rank.addEventListener("change", async () => {
         rank.disabled = true;
@@ -244,7 +271,7 @@ async function renderAdmin() {
         const pr = document.createElement("tr");
         pr.className = "perm-row";
         pr.dataset.app = app;
-        pr.innerHTML = `<td colspan="8">${permsEditor(current, perms, app)}</td>`;
+        pr.innerHTML = `<td colspan="9">${permsEditor(current, perms, app)}</td>`;
         tr.after(pr);
         pr.querySelectorAll("select[data-perm]").forEach(sel => sel.addEventListener("change", async () => {
           const all = { ...(current.app_perms || {}) };

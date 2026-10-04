@@ -62,7 +62,7 @@ function sb() {
 
 async function fetchProfile(client, userId) {
   const { data, error } = await client
-    .from("profiles").select("id,email,full_name,approved,is_admin,apps,app_roles,rank,app_perms,created_at")
+    .from("profiles").select("id,email,full_name,approved,is_admin,apps,app_roles,rank,app_perms,direktor_id,created_at")
     .eq("id", userId).maybeSingle();
   if (error) throw new AuthError("profile_error", "Could not load your account. Please try again.");
   return data;
@@ -153,7 +153,7 @@ export async function listUsers() {
   if (previewMode) return preview.users.map(u => ({ ...u, apps: [...u.apps], app_roles: { ...u.app_roles } }));
   const client = await sb();
   const { data, error } = await client
-    .from("profiles").select("id,email,full_name,approved,is_admin,apps,app_roles,rank,app_perms,created_at")
+    .from("profiles").select("id,email,full_name,approved,is_admin,apps,app_roles,rank,app_perms,direktor_id,created_at")
     .order("created_at", { ascending: false });
   if (error) throw new AuthError("admin_error", "Could not load users.");
   return data;
@@ -167,6 +167,7 @@ export async function updateUser(id, changes) {
   if ("app_roles" in changes) patch.app_roles = changes.app_roles;
   if ("rank" in changes) patch.rank = String(changes.rank || "").trim().slice(0, 60);
   if ("app_perms" in changes) patch.app_perms = changes.app_perms;
+  if ("direktor_id" in changes) patch.direktor_id = changes.direktor_id || null;
   if (previewMode) {
     const u = preview.users.find(x => x.id === id);
     if (u) Object.assign(u, patch);

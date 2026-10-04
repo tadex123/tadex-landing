@@ -14,6 +14,10 @@
   ],
   "rewrites": [
     {
+      "source": "/sb/:path*",
+      "destination": "https://ichcxptnnzakwzlmixvk.supabase.co/:path*"
+    },
+    {
       "source": "/kalkulator",
       "destination": "https://tadex-kalkulator.vercel.app/kalkulator"
     },

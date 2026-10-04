@@ -1,11 +1,12 @@
 // TADEX Hub auth module.
 // Public interface: signIn, signOut, getSession, requestAccess (+ admin helpers listUsers, updateUser).
-// Backend: Supabase (supabase-js v2 from CDN), configured in config.js.
+// Backend: Supabase (supabase-js v2, vendored), configured in config.js.
 // Without config the hub is "not connected": submissions show a message, and
 // ?preview=apps | ?preview=noapps | ?preview=admin render sample data for design review only.
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_STORAGE_KEY } from "./config.js";
 
-const SUPABASE_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+// supabase-js v2 vendored (vendor/supabase.js, esbuild bundle of @supabase/supabase-js) — no CDN (jsDelivr is unreliable from China).
+const SUPABASE_LIB = "/vendor/supabase.js";
 
 export const isConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
@@ -53,8 +54,8 @@ let clientPromise = null;
 function sb() {
   if (!isConfigured) return Promise.reject(new AuthError("not_connected", MSG.notConnected));
   if (!clientPromise) {
-    clientPromise = import(SUPABASE_CDN).then(({ createClient }) =>
-      createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" } })
+    clientPromise = import(SUPABASE_LIB).then(({ createClient }) =>
+      createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit", storageKey: SUPABASE_STORAGE_KEY } })
     );
   }
   return clientPromise;

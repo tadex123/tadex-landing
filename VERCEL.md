@@ -31,14 +31,17 @@ Migrations run in the Vercel build (`npm run build` → `scripts/migrate.mjs`).
    `https://tadex-hub.vercel.app` to `TRUSTED_ORIGINS` if the vercel.app hub should keep working; redeploy the calculator.
 2. **Vercel → project tadex-hub → Settings → Domains:** add `tadexhub.com` and `www.tadexhub.com`
    (redirect `www` → apex). Vercel shows "Invalid configuration" until DNS changes.
-3. **GitHub Pages (tadex123/tadex-landing → Settings → Pages):** remove the custom domain (or unpublish Pages)
+3. **GitHub Pages:** AFTER the DNS change, remove the custom domain:
+   `gh api -X PUT repos/tadex123/tadex-landing/pages -F cname=` (or Settings → Pages → Custom domain → Remove)
    so GitHub stops claiming the domain. Optionally merge `vercel` into `main` and connect the repo to the project.
 4. **DNS at Spaceship (tadexhub.com → Advanced DNS):**
    - Delete the 4 GitHub Pages `A @` records: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`.
-   - Add `A  @  76.76.21.21` (TTL 30 min / default).
-   - Change `CNAME www` from `tadex123.github.io.` to `cname.vercel-dns.com.`
-   - Leave every other record (e.g. Resend/email `send`, `resend._domainkey`, TXT) alone.
-   (If the Vercel Domains page shows a different recommended value, use what it shows.)
+   - Add `A  @  216.198.79.1` and `A  @  64.29.17.1` (Vercel's project-specific recommendation; the
+     legacy `76.76.21.21` also works).
+   - Change `CNAME www` from `tadex123.github.io.` to `1d7597e984a28101.vercel-dns-017.com.`
+     (legacy `cname.vercel-dns.com.` also works).
+   - Leave every other record (e.g. Resend/email `send`, `resend._domainkey`, TXT) alone. No TXT
+     verification is needed (domains verified on the Vercel side on 2026-10-04).
 5. Vercel issues the TLS certificate automatically once DNS resolves (minutes, up to the old TTL).
 6. **Supabase (hub sign-in):** Site URL / Redirect URLs already use `https://tadexhub.com/` — nothing to change.
    (While testing on `tadex-hub.vercel.app`, email-confirmation links still point at tadexhub.com.)

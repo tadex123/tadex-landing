@@ -126,7 +126,13 @@ export function mountRoute(canvas) {
   redraw();
   let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(redraw, 150); });
   if ("ResizeObserver" in window) new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(redraw, 150); }).observe(canvas);
-  if ("IntersectionObserver" in window) new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible) start(); }).observe(canvas);
+  // Start the draw-in the first time the strip is actually on screen (it can sit below the fold).
+  let seen = false;
+  if ("IntersectionObserver" in window) new IntersectionObserver(es => {
+    visible = es[0].isIntersecting;
+    if (visible && !seen && es[0].boundingClientRect.width > 2) { seen = true; t0 = performance.now(); }
+    if (visible) start();
+  }).observe(canvas);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) start(); });
   if (reduce.addEventListener) reduce.addEventListener("change", redraw);
 }

@@ -51,6 +51,9 @@ async function loadCalcPerms() {
   return calcPerms;
 }
 
+// Fallback copy of the calculator's DIREKTOR_POLICY (src/lib/access.ts) if hub-policy is unreachable.
+const DIREKTOR_FALLBACK = { editArticles: true, editLineDuty: true, editRates: false, editFreight: false, editDefaultDuty: false, editMargin: false, editVat: false,
+  seePrices: true, seeRates: true, seeFreight: true, seeDuty: true, seeMargin: true, seeVat: true, seeCost: true, seeVpc: true, seeMpc: true, seePdv: true, seeFormula: true };
 const HISTORY_PERMS = { operatorDefaults: { seeAll: false }, edit: [], see: [{ key: "seeAll", label: "Sees all calculations (all operators)" }] };
 const permsFor = app => app === "app2" ? Promise.resolve(HISTORY_PERMS) : loadCalcPerms();
 
@@ -58,8 +61,17 @@ function permsEditor(u, perms, app = "calculator") {
   const over = ((u.app_perms || {})[app]) || {};
   const role = ((u.app_roles || {})[app]) || DEFAULT_ROLE;
   const isAdmin = role !== "operator"; // overrides apply to Operators only
-  const defs = perms.operatorDefaults;
+  // What this person really gets: Admin = everything; Direktor = the calculator's fixed Direktor policy
+  // (sees everything incl. rates and margin; edits only articles + per-line duty); Operator = defaults.
+  const fixed = role === "admin" ? "all" : role === "direktor" ? (app === "app2" ? "all" : (perms.direktorPolicy || DIREKTOR_FALLBACK)) : null;
+  const defs = fixed ? null : perms.operatorDefaults;
   const row = (o) => {
+    if (fixed) {
+      const yes = fixed === "all" || !!fixed[o.key];
+      const who = role === "admin" ? "Admin" : "Direktor";
+      return `<label class="perm"><span>${esc(o.label)}</span>
+      <select data-perm="${esc(o.key)}" data-fixed="${yes ? "yes" : "no"}" disabled><option selected>${who} (${yes ? "✓ yes" : "✕ no"})</option></select></label>`;
+    }
     const d = defs ? (defs[o.key] ? "yes" : "no") : null;
     const v = o.key in over ? (over[o.key] ? "allow" : "deny") : "default";
     return `<label class="perm"><span>${esc(o.label)}</span>
@@ -77,7 +89,7 @@ function permsEditor(u, perms, app = "calculator") {
   }
   return `<div class="perms"><h4>Calculator</h4>
     <p class="muted small">${role === "admin" ? "Calculator Admin has full access; per-person overrides apply to Operators only." :
-      role === "direktor" ? "Direktor sees everything and edits articles and per-line duties; company settings stay Admin-only. Per-person overrides apply to Operators only." :
+      role === "direktor" ? "Direktor sees everything (incl. exchange rates and margin, read-only) and edits articles and per-line duties; company settings (rates, freight, duty, margin, VAT) stay Admin-only. Per-person overrides apply to Operators only." :
       "Inherits the Operator defaults set in the calculator (Admin panel). Choose Allow / Deny to override for this person only."}</p>
     <div class="perm-cols"><div><h4>Can edit</h4>${perms.edit.map(row).join("")}</div>
     <div><h4>Can see</h4>${perms.see.map(row).join("")}</div></div></div>`;

@@ -17,16 +17,18 @@ alter table public.profiles enable row level security;
 --     Visible through the same RLS as the rest of the row: the user themself and admins only.
 alter table public.profiles add column if not exists full_name text not null default '';
 
--- 1c) Per-app role, e.g. {"calculator":"admin","app2":"operator"}. The calculator maps
---     "admin" / "operator" to its own roles (anything else = operator). Admin-only writable (RLS + grants below).
+-- 1c) Per-app role, e.g. {"calculator":"admin","app2":"direktor","crm":"operator"}. One role model for every
+--     app: admin / direktor / operator (anything unknown = operator). Admin-only writable (RLS + grants below).
+--     "komercijalist" is a legacy CRM value (= operator), still accepted; migrated to "operator" below.
 alter table public.profiles add column if not exists app_roles jsonb not null default '{}'::jsonb;
 alter table public.profiles drop constraint if exists profiles_app_roles_shape;
 alter table public.profiles add constraint profiles_app_roles_shape check (
   jsonb_typeof(app_roles) = 'object'
-  and (not app_roles ? 'calculator' or app_roles->>'calculator' in ('admin', 'operator'))
-  and (not app_roles ? 'app2' or app_roles->>'app2' in ('admin', 'operator'))
-  and (not app_roles ? 'crm' or app_roles->>'crm' in ('admin', 'direktor', 'komercijalist'))
+  and (not app_roles ? 'calculator' or app_roles->>'calculator' in ('admin', 'direktor', 'operator'))
+  and (not app_roles ? 'app2' or app_roles->>'app2' in ('admin', 'direktor', 'operator'))
+  and (not app_roles ? 'crm' or app_roles->>'crm' in ('admin', 'direktor', 'operator', 'komercijalist'))
 );
+update public.profiles set app_roles = jsonb_set(app_roles, '{crm}', '"operator"') where app_roles->>'crm' = 'komercijalist';
 
 -- 1d) Per-person rank (job title, e.g. Direktor, Voditelj, Komercijalista) and per-app permission
 --     overrides on top of the role defaults, e.g. {"calculator":{"seeMargin":true,"editArticles":false}}.
@@ -171,11 +173,11 @@ update public.profiles set full_name = 'Tadija Saric'
 -- 9) Backfill app_roles: every assigned app without a role gets "operator" (owner rows already set above).
 update public.profiles p
    set app_roles = p.app_roles || coalesce((select jsonb_object_agg(a, 'operator') from unnest(p.apps) a
-                                             where a in ('calculator', 'app2') and not p.app_roles ? a), '{}'::jsonb)
- where exists (select 1 from unnest(p.apps) a where a in ('calculator', 'app2') and not p.app_roles ? a);
+                                             where a in ('calculator', 'app2', 'crm') and not p.app_roles ? a), '{}'::jsonb)
+ where exists (select 1 from unnest(p.apps) a where a in ('calculator', 'app2', 'crm') and not p.app_roles ? a);
 
 -- 1e) TADEX CRM (hub app "crm", /kalkulator/crm). Roles in app_roles.crm:
---     komercijalist (own clients only), direktor (all clients, assigns/reassigns, approves final invoices), admin.
+--     operator (own clients only), direktor (all clients, assigns/reassigns, approves final invoices), admin.
 --     crm_people(): colleagues who have the CRM app (for owner pickers / dispatch). Returns rows only
 --     to an approved caller who has the CRM app; exposes id, email, full name and CRM role — nothing else.
 create or replace function public.crm_people()
@@ -183,7 +185,7 @@ returns table (id uuid, email text, full_name text, crm_role text, is_admin bool
 language sql stable security definer
 set search_path = public
 as $$
-  select p.id, p.email, p.full_name, coalesce(p.app_roles->>'crm', 'komercijalist'), p.is_admin
+  select p.id, p.email, p.full_name, case when p.app_roles->>'crm' in ('admin', 'direktor') then p.app_roles->>'crm' else 'operator' end, p.is_admin
     from public.profiles p
    where p.approved and 'crm' = any (p.apps)
      and exists (select 1 from public.profiles me where me.id = auth.uid() and me.approved and 'crm' = any (me.apps))

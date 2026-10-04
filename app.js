@@ -13,15 +13,17 @@ const APPS = [
     icon: '<path d="M12 5v14M5 12h14"/>' },
 ];
 const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }, { id: "crm", label: "CRM", noPerms: true }];
-// Per-app roles. Calculator roles match the calculator's own permissions (Admin / Operator).
-// Povijest kalkulacija (app2): Admin sees everyone's calculations, Operator only their own
-// (unless the per-person "Sees all calculations" permission is allowed).
-// CRM: Komercijalist owns and sees only their own clients; Direktor sees all, assigns/reassigns
-// clients and approves final invoices; Admin = full. Enforced server-side by the CRM.
-const APP_ROLES = { calculator: [["operator", "Operator"], ["admin", "Admin"]], app2: [["operator", "Operator"], ["admin", "Admin"]],
-  crm: [["komercijalist", "Komercijalist"], ["direktor", "Direktor"], ["admin", "Admin"]] };
+// One role model for every hub app: Admin / Direktor / Operator (Operator default). Enforced server-side by each app.
+// Calculator: Admin = full + company settings + Operator policy + export; Direktor = full view, edits articles and
+//   per-line duty, sees the team (read-only); Operator = company Operator defaults + per-person overrides.
+// Povijest kalkulacija (app2): Admin and Direktor see everyone's calculations; Operator only their own
+//   (unless the per-person "Sees all calculations" permission is allowed).
+// CRM: Operator owns and sees only their own clients; Direktor sees all, assigns/reassigns clients and
+//   approves final invoices; Admin = full (also deletes clients).
+const ROLE_CHOICES = [["admin", "Admin"], ["direktor", "Direktor"], ["operator", "Operator"]];
+const APP_ROLES = { calculator: ROLE_CHOICES, app2: ROLE_CHOICES, crm: ROLE_CHOICES };
 const DEFAULT_ROLE = "operator";
-const defaultRole = app => app === "crm" ? "komercijalist" : DEFAULT_ROLE;
+const defaultRole = () => DEFAULT_ROLE;
 
 // Calculator permission toggles (same keys as the calculator's company policy). Labels/defaults are
 // loaded from /kalkulator/api/hub-policy when available; this list is the fallback.
@@ -51,7 +53,8 @@ const permsFor = app => app === "app2" ? Promise.resolve(HISTORY_PERMS) : loadCa
 
 function permsEditor(u, perms, app = "calculator") {
   const over = ((u.app_perms || {})[app]) || {};
-  const isAdmin = ((u.app_roles || {})[app]) === "admin";
+  const role = ((u.app_roles || {})[app]) || DEFAULT_ROLE;
+  const isAdmin = role !== "operator"; // overrides apply to Operators only
   const defs = perms.operatorDefaults;
   const row = (o) => {
     const d = defs ? (defs[o.key] ? "yes" : "no") : null;
@@ -65,12 +68,13 @@ function permsEditor(u, perms, app = "calculator") {
   };
   if (app === "app2") {
     return `<div class="perms"><h4>Povijest kalkulacija</h4>
-      <p class="muted small">${isAdmin ? "Admin sees everyone's calculations." :
+      <p class="muted small">${isAdmin ? (role === "admin" ? "Admin" : "Direktor") + " sees everyone's calculations." :
         "Operator sees only their own calculations by default. Allow to let this person see all operators' calculations."}</p>
       <div class="perm-cols"><div>${perms.see.map(row).join("")}</div></div></div>`;
   }
   return `<div class="perms"><h4>Calculator</h4>
-    <p class="muted small">${isAdmin ? "Calculator Admin has full access; per-person overrides apply to Operators only." :
+    <p class="muted small">${role === "admin" ? "Calculator Admin has full access; per-person overrides apply to Operators only." :
+      role === "direktor" ? "Direktor sees everything and edits articles and per-line duties; company settings stay Admin-only. Per-person overrides apply to Operators only." :
       "Inherits the Operator defaults set in the calculator (Admin panel). Choose Allow / Deny to override for this person only."}</p>
     <div class="perm-cols"><div><h4>Can edit</h4>${perms.edit.map(row).join("")}</div>
     <div><h4>Can see</h4>${perms.see.map(row).join("")}</div></div></div>`;

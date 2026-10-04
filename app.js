@@ -4,12 +4,16 @@ import * as auth from "./auth.js";
 const APPS = [
   { id: "calculator", title: "Kalkulator", label: "Open app", href: "/kalkulator/",
     icon: '<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx="1"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>' },
-  { id: "app2", title: "Coming soon", label: "Reserved for a new app", href: "#", placeholder: true,
+  { id: "app2", title: "Povijest kalkulacija", label: "Open app", href: "/kalkulator/historija",
+    icon: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4.5h4.5"/><path d="M12 7.5V12l3 2"/>' },
+  // Placeholder for the next app: no access settings, shown to every signed-in person.
+  { id: "app3", title: "Coming soon", label: "Reserved for a new app", href: "#", placeholder: true, public: true,
     icon: '<path d="M12 5v14M5 12h14"/>' },
 ];
-const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "App 2" }];
+const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }];
 // Per-app roles. Calculator roles match the calculator's own permissions (Admin / Operator).
-// App 2 has a role field ready for when that app exists.
+// Povijest kalkulacija (app2): Admin sees everyone's calculations, Operator only their own
+// (unless the per-person "Sees all calculations" permission is allowed).
 const APP_ROLES = { calculator: [["operator", "Operator"], ["admin", "Admin"]], app2: [["operator", "Operator"], ["admin", "Admin"]] };
 const DEFAULT_ROLE = "operator";
 
@@ -36,9 +40,12 @@ async function loadCalcPerms() {
   return calcPerms;
 }
 
-function permsEditor(u, perms) {
-  const over = ((u.app_perms || {}).calculator) || {};
-  const isAdmin = ((u.app_roles || {}).calculator) === "admin";
+const HISTORY_PERMS = { operatorDefaults: { seeAll: false }, edit: [], see: [{ key: "seeAll", label: "Sees all calculations (all operators)" }] };
+const permsFor = app => app === "app2" ? Promise.resolve(HISTORY_PERMS) : loadCalcPerms();
+
+function permsEditor(u, perms, app = "calculator") {
+  const over = ((u.app_perms || {})[app]) || {};
+  const isAdmin = ((u.app_roles || {})[app]) === "admin";
   const defs = perms.operatorDefaults;
   const row = (o) => {
     const d = defs ? (defs[o.key] ? "yes" : "no") : null;
@@ -50,7 +57,13 @@ function permsEditor(u, perms) {
         <option value="deny" ${v === "deny" ? "selected" : ""}>Deny</option>
       </select></label>`;
   };
-  return `<div class="perms">
+  if (app === "app2") {
+    return `<div class="perms"><h4>Povijest kalkulacija</h4>
+      <p class="muted small">${isAdmin ? "Admin sees everyone's calculations." :
+        "Operator sees only their own calculations by default. Allow to let this person see all operators' calculations."}</p>
+      <div class="perm-cols"><div>${perms.see.map(row).join("")}</div></div></div>`;
+  }
+  return `<div class="perms"><h4>Calculator</h4>
     <p class="muted small">${isAdmin ? "Calculator Admin has full access; per-person overrides apply to Operators only." :
       "Inherits the Operator defaults set in the calculator (Admin panel). Choose Allow / Deny to override for this person only."}</p>
     <div class="perm-cols"><div><h4>Can edit</h4>${perms.edit.map(row).join("")}</div>
@@ -61,7 +74,9 @@ function permsEditor(u, perms) {
 const NEXT = (() => {
   const raw = new URLSearchParams(location.search).get("next") || "";
   if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return null;
-  const app = APPS.find(a => !a.placeholder && (raw === a.href.replace(/\/$/, "") || raw.startsWith(a.href)));
+  const path = raw.split(/[?#]/)[0];
+  const app = APPS.filter(a => !a.placeholder && (path === a.href.replace(/\/$/, "") || path.startsWith(a.href.endsWith("/") ? a.href : a.href + "/") || path === a.href))
+    .sort((x, y) => y.href.length - x.href.length)[0];
   return app ? { path: raw, app: app.id } : null;
 })();
 
@@ -136,13 +151,10 @@ function renderChip() {
 
 function renderApps() {
   const allowed = new Set(session.profile.apps || []);
-  const visible = APPS.filter(a => allowed.has(a.id));
+  const visible = APPS.filter(a => a.public || allowed.has(a.id));
   const grid = $("#apps-grid");
-  if (!visible.length) {
-    grid.innerHTML = '<p class="empty">No apps assigned yet. Contact your admin.</p>';
-    return;
-  }
-  grid.innerHTML = visible.map(a => `
+  const none = !visible.some(a => !a.public) ? '<p class="empty">No apps assigned yet. Contact your admin.</p>' : "";
+  grid.innerHTML = none + visible.map(a => `
     <a class="tile${a.placeholder ? " placeholder" : ""}" href="${a.href}"${a.placeholder ? ' data-placeholder="1"' : ""}>
       <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>
       <span class="tile-title">${esc(a.title)}</span>
@@ -173,8 +185,8 @@ async function renderAdmin() {
               const role = (u.app_roles || {})[a.id] || DEFAULT_ROLE;
               return `<div class="app-row"><label><input type="checkbox" data-app="${a.id}" ${on ? "checked" : ""}> ${a.label}</label>
               <select class="app-role" data-role-for="${a.id}" aria-label="${esc(a.label)} role" ${on ? "" : "disabled"}>${APP_ROLES[a.id].map(([v, l]) =>
-                `<option value="${v}" ${v === role ? "selected" : ""}>${l}</option>`).join("")}</select>${a.id === "calculator" ?
-                ` <button type="button" class="perms-btn" data-perms ${on ? "" : "disabled"}>Permissions${Object.keys(((u.app_perms || {}).calculator) || {}).length ? " •" : ""}</button>` : ""}</div>`; }).join("")}</div></td>
+                `<option value="${v}" ${v === role ? "selected" : ""}>${l}</option>`).join("")}</select>
+                <button type="button" class="perms-btn" data-perms="${a.id}" ${on ? "" : "disabled"}>Permissions${Object.keys(((u.app_perms || {})[a.id]) || {}).length ? " •" : ""}</button></div>`; }).join("")}</div></td>
             <td class="act">${self ? '<span class="muted small">You</span>' :
               `<button class="ab ${u.approved ? "revoke" : "approve"}" data-approved="${u.approved ? 1 : 0}">${u.approved ? "Revoke" : "Approve"}</button>`}</td>
           </tr>`; }).join("")}</tbody>
@@ -199,7 +211,8 @@ async function renderAdmin() {
           const saved = await auth.updateUser(id, { apps, app_roles });
           current.apps = saved.apps; current.app_roles = saved.app_roles;
           if (sel) sel.disabled = !cb.checked;
-          if (cb.dataset.app === "calculator" && pbtn) pbtn.disabled = !cb.checked;
+          const pb = tr.querySelector(`button[data-perms="${cb.dataset.app}"]`);
+          if (pb) pb.disabled = !cb.checked;
           toast("Saved");
         }
         catch (e) { cb.checked = !cb.checked; toast(e.message, true); }
@@ -212,31 +225,34 @@ async function renderAdmin() {
         catch (e) { rank.value = current.rank || ""; toast(e.message, true); }
         finally { rank.disabled = false; }
       });
-      const pbtn = tr.querySelector("button[data-perms]");
-      if (pbtn) pbtn.addEventListener("click", async () => {
-        const open = tr.nextElementSibling && tr.nextElementSibling.classList.contains("perm-row");
-        if (open) { tr.nextElementSibling.remove(); return; }
-        const perms = await loadCalcPerms();
+      const openPerms = async (pbtn) => {
+        const app = pbtn.dataset.perms;
+        const next = tr.nextElementSibling;
+        const isOpen = next && next.classList.contains("perm-row");
+        if (isOpen) { const same = next.dataset.app === app; next.remove(); if (same) return; }
+        const perms = await permsFor(app);
         const pr = document.createElement("tr");
         pr.className = "perm-row";
-        pr.innerHTML = `<td colspan="8">${permsEditor(current, perms)}</td>`;
+        pr.dataset.app = app;
+        pr.innerHTML = `<td colspan="8">${permsEditor(current, perms, app)}</td>`;
         tr.after(pr);
         pr.querySelectorAll("select[data-perm]").forEach(sel => sel.addEventListener("change", async () => {
           const all = { ...(current.app_perms || {}) };
-          const calc = { ...(all.calculator || {}) };
-          const before = sel.dataset.perm in calc ? (calc[sel.dataset.perm] ? "allow" : "deny") : "default";
-          if (sel.value === "default") delete calc[sel.dataset.perm]; else calc[sel.dataset.perm] = sel.value === "allow";
-          all.calculator = calc;
+          const mine = { ...(all[app] || {}) };
+          const before = sel.dataset.perm in mine ? (mine[sel.dataset.perm] ? "allow" : "deny") : "default";
+          if (sel.value === "default") delete mine[sel.dataset.perm]; else mine[sel.dataset.perm] = sel.value === "allow";
+          all[app] = mine;
           sel.disabled = true;
           try {
             const saved = await auth.updateUser(id, { app_perms: all });
             current.app_perms = saved.app_perms;
-            pbtn.textContent = "Permissions" + (Object.keys((saved.app_perms || {}).calculator || {}).length ? " •" : "");
+            pbtn.textContent = "Permissions" + (Object.keys((saved.app_perms || {})[app] || {}).length ? " •" : "");
             toast("Saved");
           } catch (e) { sel.value = before; toast(e.message, true); }
           finally { sel.disabled = false; }
         }));
-      });
+      };
+      tr.querySelectorAll("button[data-perms]").forEach(pbtn => pbtn.addEventListener("click", () => openPerms(pbtn)));
       tr.querySelectorAll("select[data-role-for]").forEach(sel => sel.addEventListener("change", async () => {
         const before = (current.app_roles || {})[sel.dataset.roleFor] || DEFAULT_ROLE;
         sel.disabled = true;
@@ -244,7 +260,9 @@ async function renderAdmin() {
           const saved = await auth.updateUser(id, { app_roles: rolesNow() });
           current.app_roles = saved.app_roles;
           const pr = tr.nextElementSibling;
-          if (pr && pr.classList.contains("perm-row")) { pr.remove(); if (pbtn) pbtn.click(); }
+          if (pr && pr.classList.contains("perm-row") && pr.dataset.app === sel.dataset.roleFor) {
+            pr.remove(); openPerms(tr.querySelector(`button[data-perms="${sel.dataset.roleFor}"]`));
+          }
           toast("Saved");
         }
         catch (e) { sel.value = before; toast(e.message, true); }

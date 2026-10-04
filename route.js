@@ -226,7 +226,7 @@ export function mountRoute(canvas) {
       const { S, E } = ends.bih;
       cx.save(); cx.strokeStyle = "rgba(255,255,255,.85)"; cx.lineWidth = 1.4; cx.shadowColor = "rgba(143,211,245,.9)"; cx.shadowBlur = 6;
       cx.beginPath(); cx.moveTo(S[0], S[1]); cx.lineTo(E[0], E[1]); cx.stroke(); cx.restore();
-      const pu = reduce.matches ? 0.5 : (T / 1600) % 1;
+      const pu = reduce.matches ? 0.5 : (((T / 1600) % 1) + 1) % 1;
       cx.strokeStyle = `rgba(255,255,255,${(1 - pu) * .8})`; cx.lineWidth = 1;
       cx.beginPath(); cx.arc(E[0], E[1], 2 + pu * 12, 0, 7); cx.stroke();
       cx.fillStyle = "#fff"; cx.beginPath(); cx.arc(E[0], E[1], 3, 0, 7); cx.fill();
@@ -236,7 +236,7 @@ export function mountRoute(canvas) {
     // origins: city -> export port (land), pulsing marker, bilingual name
     ends.forEach(({ o, A, N }, i) => {
       cx.strokeStyle = "rgba(255,255,255,.8)"; cx.lineWidth = 1.4; cx.beginPath(); cx.moveTo(A[0], A[1]); cx.lineTo(N[0], N[1]); cx.stroke();
-      const pu = reduce.matches ? 0.5 : ((T / 1300) + i * 0.5) % 1;
+      const pu = reduce.matches ? 0.5 : ((((T / 1300) + i * 0.5) % 1) + 1) % 1;
       cx.strokeStyle = `rgba(255,255,255,${1 - pu})`; cx.lineWidth = 1.4;
       cx.beginPath(); cx.arc(A[0], A[1], 4 + pu * (small ? 12 : 18), 0, 7); cx.stroke();
       cx.save(); cx.fillStyle = "#fff"; cx.shadowColor = "#fff"; cx.shadowBlur = 14;

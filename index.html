@@ -26,7 +26,7 @@ a{color:inherit}
 header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .bar{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
 .mark{font-weight:800;font-size:1.4rem;letter-spacing:.12em;text-decoration:none;display:flex;align-items:baseline;gap:8px}
-.mark span{color:var(--blue)}
+.mark b{font-weight:800}.mark span{color:var(--blue)}
 .mark small{font-size:.8rem;font-weight:600;letter-spacing:.04em;color:var(--muted)}
 nav{display:flex;gap:24px;align-items:center}
 nav a{text-decoration:none;font-weight:500;font-size:.95rem;color:var(--muted)}
@@ -80,7 +80,7 @@ footer a:hover{color:var(--blue)}
 <body>
 <header>
  <div class="wrap bar">
-  <a class="mark" href="#top" aria-label="TADEX Hub home">TADE<span>X</span><small>Hub</small></a>
+  <a class="mark" href="#top" aria-label="TADEX Hub home"><b>TADE<span>X</span></b><small>Hub</small></a>
   <nav aria-label="Main">
    <a class="hide-sm" href="#start">Get started</a>
    <a class="hide-sm" href="#help">Help</a>

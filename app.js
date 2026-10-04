@@ -1,6 +1,7 @@
 // TADEX Hub UI. Renders the signed-out form, the apps grid and the admin panel.
 import * as auth from "./auth.js";
 
+const QUOTES_ENABLED = !/(^|\.)tadexhub\.com$/.test(location.hostname);
 const APPS = [
   { id: "calculator", title: "Kalkulator", label: "Open app", href: "/kalkulator/",
     icon: '<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx="1"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>' },
@@ -8,11 +9,15 @@ const APPS = [
     icon: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4.5h4.5"/><path d="M12 7.5V12l3 2"/>' },
   { id: "crm", title: "CRM", label: "Open app", href: "/kalkulator/crm",
     icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M15.5 5.3a3 3 0 0 1 0 5.4M17.5 14.8c1.7.6 2.7 2.2 3 4.7"/>' },
-  // Placeholder for the next app: no access settings, shown to every signed-in person.
-  { id: "app3", title: "Coming soon", label: "Reserved for a new app", href: "#", placeholder: true, public: true,
-    icon: '<path d="M12 5v14M5 12h14"/>' },
+  // app3 = Ponude · 报价单 · Quotations: live on staging only until Tadija reviews it; on tadexhub.com it stays "Coming soon".
+  QUOTES_ENABLED
+    ? { id: "app3", title: "Ponude · 报价单 · Quotations", label: "Open app", href: "/kalkulator/ponude",
+        icon: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15.5h5M10 8.5h2"/>' }
+    : { id: "app3", title: "Coming soon", label: "Reserved for a new app", href: "#", placeholder: true, public: true,
+        icon: '<path d="M12 5v14M5 12h14"/>' },
 ];
-const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }, { id: "crm", label: "CRM", noPerms: true }];
+const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }, { id: "crm", label: "CRM", noPerms: true },
+  ...(QUOTES_ENABLED ? [{ id: "app3", label: "Ponude · Quotations", noPerms: true }] : [])];
 // One role model for every hub app: Admin / Direktor / Operator (Operator default). Enforced server-side by each app.
 // Calculator: Admin = full + company settings + Operator policy + export; Direktor = full view, edits articles and
 //   per-line duty, sees the team (read-only); Operator = company Operator defaults + per-person overrides.
@@ -21,7 +26,7 @@ const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", lab
 // CRM: Operator owns and sees only their own clients; Direktor sees all, assigns/reassigns clients and
 //   approves final invoices; Admin = full (also deletes clients).
 const ROLE_CHOICES = [["admin", "Admin"], ["direktor", "Direktor"], ["operator", "Operator"]];
-const APP_ROLES = { calculator: ROLE_CHOICES, app2: ROLE_CHOICES, crm: ROLE_CHOICES };
+const APP_ROLES = { calculator: ROLE_CHOICES, app2: ROLE_CHOICES, crm: ROLE_CHOICES, app3: ROLE_CHOICES };
 const DEFAULT_ROLE = "operator";
 // Teams: each Operator belongs to at most ONE Direktor (profiles.direktor_id). A Direktor's default view in
 // Povijest kalkulacija and the CRM is their team (+ own); they can switch to "Svi". Admin sees everything.

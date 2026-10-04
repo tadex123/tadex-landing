@@ -30,6 +30,7 @@ const css = `
 .hc-send{border:0;border-radius:10px;background:var(--deep,#0E4C80);color:#fff;padding:0 14px;height:44px;font-weight:600;cursor:pointer}
 .hc-send:disabled{opacity:.4}
 .hc-use{font-size:11px;color:var(--muted,#4A6178);text-align:right;padding:0 10px 8px}
+.hc-btn[hidden],.hc-panel[hidden]{display:none!important}
 @media print{.hc-btn,.hc-panel{display:none}}`;
 
 let msgs = [], busy = false, used = null, open = false, error = "";

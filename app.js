@@ -8,6 +8,18 @@ const APPS = [
     icon: '<path d="M12 5v14M5 12h14"/>' },
 ];
 const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "App 2" }];
+// Per-app roles. Calculator roles match the calculator's own permissions (Admin / Operator).
+// App 2 has a role field ready for when that app exists.
+const APP_ROLES = { calculator: [["operator", "Operator"], ["admin", "Admin"]], app2: [["operator", "Operator"], ["admin", "Admin"]] };
+const DEFAULT_ROLE = "operator";
+
+// ?next=/kalkulator/... : where to go after sign-in (same-origin app paths only).
+const NEXT = (() => {
+  const raw = new URLSearchParams(location.search).get("next") || "";
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return null;
+  const app = APPS.find(a => !a.placeholder && (raw === a.href.replace(/\/$/, "") || raw.startsWith(a.href)));
+  return app ? { path: raw, app: app.id } : null;
+})();
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -103,28 +115,59 @@ async function renderAdmin() {
     if (!users.length) { body.innerHTML = '<p class="muted">No users yet.</p>'; return; }
     body.innerHTML = `
       <table class="users">
-        <thead><tr><th>Person</th><th>Role</th><th>Requested</th><th>Status</th><th>Apps</th><th><span class="sr">Action</span></th></tr></thead>
+        <thead><tr><th>Person</th><th>Hub role</th><th>Requested</th><th>Status</th><th>Apps</th><th><span class="sr">Action</span></th></tr></thead>
         <tbody>${users.map(u => {
           const self = u.id === session.user.id;
           return `<tr data-id="${esc(u.id)}">
             <td data-k="Person" class="who"><div><span class="who-name">${esc(u.full_name || "—")}</span><span class="who-email">${esc(u.email)}</span></div></td>
-            <td data-k="Role"><span class="role ${u.is_admin ? "admin" : "operator"}">${u.is_admin ? "Admin" : "Operator"}</span></td>
+            <td data-k="Hub role"><span class="role ${u.is_admin ? "admin" : "operator"}">${u.is_admin ? "Admin" : "Operator"}</span></td>
             <td data-k="Requested">${esc(fmtDate(u.created_at))}</td>
             <td data-k="Status"><span class="badge ${u.approved ? "ok" : "wait"}">${u.approved ? "Approved" : "Pending"}</span></td>
-            <td data-k="Apps"><div class="checks">${ADMIN_APPS.map(a => `
-              <label><input type="checkbox" data-app="${a.id}" ${(u.apps || []).includes(a.id) ? "checked" : ""}> ${a.label}</label>`).join("")}</div></td>
+            <td data-k="Apps"><div class="checks">${ADMIN_APPS.map(a => {
+              const on = (u.apps || []).includes(a.id);
+              const role = (u.app_roles || {})[a.id] || DEFAULT_ROLE;
+              return `<div class="app-row"><label><input type="checkbox" data-app="${a.id}" ${on ? "checked" : ""}> ${a.label}</label>
+              <select class="app-role" data-role-for="${a.id}" aria-label="${esc(a.label)} role" ${on ? "" : "disabled"}>${APP_ROLES[a.id].map(([v, l]) =>
+                `<option value="${v}" ${v === role ? "selected" : ""}>${l}</option>`).join("")}</select></div>`; }).join("")}</div></td>
             <td class="act">${self ? '<span class="muted small">You</span>' :
               `<button class="ab ${u.approved ? "revoke" : "approve"}" data-approved="${u.approved ? 1 : 0}">${u.approved ? "Revoke" : "Approve"}</button>`}</td>
           </tr>`; }).join("")}</tbody>
       </table>`;
     body.querySelectorAll("tr[data-id]").forEach(tr => {
       const id = tr.dataset.id;
+      const current = users.find(x => x.id === id);
+      const rolesNow = () => {
+        const roles = { ...(current.app_roles || {}) };
+        tr.querySelectorAll("select[data-role-for]").forEach(sel => {
+          const on = tr.querySelector(`input[data-app="${sel.dataset.roleFor}"]`).checked;
+          if (on) roles[sel.dataset.roleFor] = sel.value;
+        });
+        return roles;
+      };
       tr.querySelectorAll("input[data-app]").forEach(cb => cb.addEventListener("change", async () => {
         const apps = [...tr.querySelectorAll("input[data-app]:checked")].map(x => x.dataset.app);
+        const sel = tr.querySelector(`select[data-role-for="${cb.dataset.app}"]`);
+        const app_roles = rolesNow();
         cb.disabled = true;
-        try { await auth.updateUser(id, { apps }); toast("Saved"); }
+        try {
+          const saved = await auth.updateUser(id, { apps, app_roles });
+          current.apps = saved.apps; current.app_roles = saved.app_roles;
+          if (sel) sel.disabled = !cb.checked;
+          toast("Saved");
+        }
         catch (e) { cb.checked = !cb.checked; toast(e.message, true); }
         finally { cb.disabled = false; }
+      }));
+      tr.querySelectorAll("select[data-role-for]").forEach(sel => sel.addEventListener("change", async () => {
+        const before = (current.app_roles || {})[sel.dataset.roleFor] || DEFAULT_ROLE;
+        sel.disabled = true;
+        try {
+          const saved = await auth.updateUser(id, { app_roles: rolesNow() });
+          current.app_roles = saved.app_roles;
+          toast("Saved");
+        }
+        catch (e) { sel.value = before; toast(e.message, true); }
+        finally { sel.disabled = !tr.querySelector(`input[data-app="${sel.dataset.roleFor}"]`).checked; }
       }));
       const btn = tr.querySelector("button.ab");
       if (btn) btn.addEventListener("click", async () => {
@@ -151,7 +194,20 @@ function route() {
   else { setState("apps"); renderApps(); }
 }
 
+/** After sign-in: return to the app that sent the person here (if they have it). */
+function goNext() {
+  if (!NEXT || !session || auth.previewMode) return false;
+  if (!(session.profile.apps || []).includes(NEXT.app)) {
+    setStatus("");
+    toast("You don't have access to that app yet. Ask your admin.", true);
+    return false;
+  }
+  location.replace(NEXT.path);
+  return true;
+}
+
 function renderSignedIn() {
+  if (goNext()) return;
   renderChip();
   if (auth.previewMode === "admin" && !location.hash) history.replaceState(null, "", "#admin");
   route();

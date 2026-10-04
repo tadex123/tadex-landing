@@ -159,3 +159,6 @@ body:not([data-state="out"]) h1{font-size:clamp(2.2rem,5vw,3.6rem)}
  body:not([data-state="out"]) .hero{padding:110px 0 64px}
 }
 body:not([data-state="out"]) .sub{max-width:640px}
+.checks .app-row{display:inline-flex;align-items:center;gap:8px}
+.app-role{font:inherit;font-size:.82rem;padding:4px 6px;border:1px solid #CBD5E1;border-radius:6px;background:#fff;color:inherit}
+.app-role:disabled{opacity:.45}

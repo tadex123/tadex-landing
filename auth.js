@@ -62,7 +62,7 @@ function sb() {
 
 async function fetchProfile(client, userId) {
   const { data, error } = await client
-    .from("profiles").select("id,email,full_name,approved,is_admin,apps,created_at")
+    .from("profiles").select("id,email,full_name,approved,is_admin,apps,app_roles,created_at")
     .eq("id", userId).maybeSingle();
   if (error) throw new AuthError("profile_error", "Could not load your account. Please try again.");
   return data;
@@ -83,9 +83,9 @@ function friendly(error) {
 const now = Date.now(), day = 86400000;
 const preview = {
   users: [
-    { id: "p1", email: "admin@example.com", full_name: "Admin Example", approved: true, is_admin: true, apps: ["calculator", "app2"], created_at: new Date(now - 30 * day).toISOString() },
-    { id: "p2", email: "team.member@example.com", full_name: "Team Member", approved: true, is_admin: false, apps: ["calculator"], created_at: new Date(now - 12 * day).toISOString() },
-    { id: "p3", email: "new.colleague@example.com", full_name: "New Colleague", approved: false, is_admin: false, apps: [], created_at: new Date(now - 1 * day).toISOString() },
+    { id: "p1", email: "admin@example.com", full_name: "Admin Example", approved: true, is_admin: true, apps: ["calculator", "app2"], app_roles: { calculator: "admin", app2: "admin" }, created_at: new Date(now - 30 * day).toISOString() },
+    { id: "p2", email: "team.member@example.com", full_name: "Team Member", approved: true, is_admin: false, apps: ["calculator"], app_roles: { calculator: "operator" }, created_at: new Date(now - 12 * day).toISOString() },
+    { id: "p3", email: "new.colleague@example.com", full_name: "New Colleague", approved: false, is_admin: false, apps: [], app_roles: {}, created_at: new Date(now - 1 * day).toISOString() },
   ],
 };
 function previewSession() {
@@ -150,20 +150,21 @@ export async function signOut() {
 
 // ---------- Admin (RLS allows these only for profiles.is_admin = true) ----------
 export async function listUsers() {
-  if (previewMode) return preview.users.map(u => ({ ...u, apps: [...u.apps] }));
+  if (previewMode) return preview.users.map(u => ({ ...u, apps: [...u.apps], app_roles: { ...u.app_roles } }));
   const client = await sb();
   const { data, error } = await client
-    .from("profiles").select("id,email,full_name,approved,is_admin,apps,created_at")
+    .from("profiles").select("id,email,full_name,approved,is_admin,apps,app_roles,created_at")
     .order("created_at", { ascending: false });
   if (error) throw new AuthError("admin_error", "Could not load users.");
   return data;
 }
 
-/** changes: { approved?: boolean, apps?: string[] } */
+/** changes: { approved?: boolean, apps?: string[], app_roles?: { [appId]: "admin" | "operator" } } */
 export async function updateUser(id, changes) {
   const patch = {};
   if ("approved" in changes) patch.approved = !!changes.approved;
   if ("apps" in changes) patch.apps = changes.apps;
+  if ("app_roles" in changes) patch.app_roles = changes.app_roles;
   if (previewMode) {
     const u = preview.users.find(x => x.id === id);
     if (u) Object.assign(u, patch);

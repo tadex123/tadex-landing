@@ -17,6 +17,16 @@ alter table public.profiles enable row level security;
 --     Visible through the same RLS as the rest of the row: the user themself and admins only.
 alter table public.profiles add column if not exists full_name text not null default '';
 
+-- 1c) Per-app role, e.g. {"calculator":"admin","app2":"operator"}. The calculator maps
+--     "admin" / "operator" to its own roles (anything else = operator). Admin-only writable (RLS + grants below).
+alter table public.profiles add column if not exists app_roles jsonb not null default '{}'::jsonb;
+alter table public.profiles drop constraint if exists profiles_app_roles_shape;
+alter table public.profiles add constraint profiles_app_roles_shape check (
+  jsonb_typeof(app_roles) = 'object'
+  and (not app_roles ? 'calculator' or app_roles->>'calculator' in ('admin', 'operator'))
+  and (not app_roles ? 'app2' or app_roles->>'app2' in ('admin', 'operator'))
+);
+
 -- 2) Helper: is the current user an admin? (security definer avoids RLS recursion)
 create or replace function public.is_admin()
 returns boolean
@@ -46,7 +56,7 @@ begin
   values (new.id, new.email, left(btrim(coalesce(new.raw_user_meta_data->>'full_name', '')), 120))
   on conflict (id) do nothing;
   if lower(new.email) = any (public.hub_owner_emails()) and new.email_confirmed_at is not null then
-    update public.profiles set approved = true, is_admin = true, apps = array['calculator','app2'] where id = new.id;
+    update public.profiles set approved = true, is_admin = true, apps = array['calculator','app2'], app_roles = '{"calculator":"admin","app2":"admin"}'::jsonb where id = new.id;
   end if;
   return new;
 end;
@@ -66,7 +76,7 @@ as $$
 begin
   if lower(new.email) = any (public.hub_owner_emails())
      and new.email_confirmed_at is not null and old.email_confirmed_at is null then
-    update public.profiles set approved = true, is_admin = true, apps = array['calculator','app2'] where id = new.id;
+    update public.profiles set approved = true, is_admin = true, apps = array['calculator','app2'], app_roles = '{"calculator":"admin","app2":"admin"}'::jsonb where id = new.id;
   end if;
   return new;
 end;
@@ -99,7 +109,7 @@ create policy "profiles: admins update"
 revoke all on public.profiles from anon, authenticated;
 grant select on public.profiles to authenticated;
 -- Admins may change only these columns from the app. is_admin can only be changed here in the SQL Editor.
-grant update (approved, apps) on public.profiles to authenticated;
+grant update (approved, apps, app_roles) on public.profiles to authenticated;
 
 -- 6) Guard: an admin can't revoke their own approval from the app (prevents locking yourself out)
 create or replace function public.guard_self_revoke()
@@ -127,7 +137,7 @@ drop function if exists public.hub_owner_email();  -- replaced by hub_owner_emai
 
 -- 7) Owner admins: handled automatically by the triggers above once an address in
 update public.profiles p
-   set approved = true, is_admin = true, apps = array['calculator', 'app2']
+   set approved = true, is_admin = true, apps = array['calculator', 'app2'], app_roles = '{"calculator":"admin","app2":"admin"}'::jsonb
   from auth.users u
  where u.id = p.id
    and lower(u.email) = any (public.hub_owner_emails())
@@ -142,3 +152,9 @@ update public.profiles p
  where u.id = p.id and p.full_name = '';
 update public.profiles set full_name = 'Tadija Saric'
  where lower(email) = 'tadijasaric92@gmail.com' and full_name in ('', 'Tadijasaric92');
+
+-- 9) Backfill app_roles: every assigned app without a role gets "operator" (owner rows already set above).
+update public.profiles p
+   set app_roles = p.app_roles || coalesce((select jsonb_object_agg(a, 'operator') from unnest(p.apps) a
+                                             where a in ('calculator', 'app2') and not p.app_roles ? a), '{}'::jsonb)
+ where exists (select 1 from unnest(p.apps) a where a in ('calculator', 'app2') and not p.app_roles ? a);

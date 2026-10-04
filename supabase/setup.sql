@@ -29,7 +29,7 @@ grant execute on function public.is_admin() to authenticated;
 --    but only once that email address is CONFIRMED (so nobody can claim it by just signing up with it).
 create or replace function public.hub_owner_emails()
 returns text[] language sql immutable as $$
-  select array['tadijasaric92@gmail.com', 'info@tadextrade.com']::text[]
+  select array['tadijasaric92@gmail.com']::text[]
 $$;
 
 create or replace function public.handle_new_user()
@@ -122,7 +122,6 @@ revoke all on function public.hub_owner_emails() from public, anon, authenticate
 drop function if exists public.hub_owner_email();  -- replaced by hub_owner_emails()
 
 -- 7) Owner admins: handled automatically by the triggers above once an address in
---    hub_owner_emails() (tadijasaric92@gmail.com, info@tadextrade.com) signs up and confirms the email. If the account already exists and is confirmed, this catches it up:
 update public.profiles p
    set approved = true, is_admin = true, apps = array['calculator', 'app2']
   from auth.users u

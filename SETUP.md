@@ -16,7 +16,6 @@ The hub has its own accounts, separate from the app accounts.
    export const SUPABASE_ANON_KEY = "eyJ...";
    ```
    The anon key is meant to be public. Never put the `service_role` key in this repo.
-6. **Owner admins (automatic).** `tadijasaric92@gmail.com` and `info@tadextrade.com` (listed in `public.hub_owner_emails()`) become admin + approved with all apps as soon as they request access **and confirm their email**. To change the list, edit `hub_owner_emails()` in `setup.sql` and re-run it.
 7. Commit and push `config.js`. Sign in and use **Admin** in the header to approve people and tick which apps each person sees.
 
 ## How access works

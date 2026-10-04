@@ -8,6 +8,7 @@ This branch serves the hub from Vercel instead of GitHub Pages, with the calcula
 | Path | Served by | Source |
 |---|---|---|
 | `tadexhub.com/` (+ `app.js`, `auth.js`, `login/`, …) | Vercel project **tadex-hub** (static) | this repo, branch `vercel` |
+| `tadexhub.com/crm` | redirect → `/kalkulator/crm` (TADEX CRM, served by the calculator project, hub app key `crm`) | `tadex123/tadex-kalkulator`, route `src/routes/crm.tsx` |
 | `tadexhub.com/kalkulator/*` | proxied by `vercel.json` rewrites → project **tadex-kalkulator** (`https://tadex-kalkulator.vercel.app/kalkulator/*`) | `tadex123/tadex-kalkulator`, branch `selfhost-kalkulator-basepath` |
 
 The calculator is built with base path `/kalkulator` (assets, server functions, `/kalkulator/api/auth`,

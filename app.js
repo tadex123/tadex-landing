@@ -6,16 +6,22 @@ const APPS = [
     icon: '<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx="1"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>' },
   { id: "app2", title: "Povijest kalkulacija", label: "Open app", href: "/kalkulator/historija",
     icon: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4.5h4.5"/><path d="M12 7.5V12l3 2"/>' },
+  { id: "crm", title: "CRM", label: "Open app", href: "/kalkulator/crm",
+    icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M15.5 5.3a3 3 0 0 1 0 5.4M17.5 14.8c1.7.6 2.7 2.2 3 4.7"/>' },
   // Placeholder for the next app: no access settings, shown to every signed-in person.
   { id: "app3", title: "Coming soon", label: "Reserved for a new app", href: "#", placeholder: true, public: true,
     icon: '<path d="M12 5v14M5 12h14"/>' },
 ];
-const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }];
+const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }, { id: "crm", label: "CRM", noPerms: true }];
 // Per-app roles. Calculator roles match the calculator's own permissions (Admin / Operator).
 // Povijest kalkulacija (app2): Admin sees everyone's calculations, Operator only their own
 // (unless the per-person "Sees all calculations" permission is allowed).
-const APP_ROLES = { calculator: [["operator", "Operator"], ["admin", "Admin"]], app2: [["operator", "Operator"], ["admin", "Admin"]] };
+// CRM: Komercijalist owns and sees only their own clients; Direktor sees all, assigns/reassigns
+// clients and approves final invoices; Admin = full. Enforced server-side by the CRM.
+const APP_ROLES = { calculator: [["operator", "Operator"], ["admin", "Admin"]], app2: [["operator", "Operator"], ["admin", "Admin"]],
+  crm: [["komercijalist", "Komercijalist"], ["direktor", "Direktor"], ["admin", "Admin"]] };
 const DEFAULT_ROLE = "operator";
+const defaultRole = app => app === "crm" ? "komercijalist" : DEFAULT_ROLE;
 
 // Calculator permission toggles (same keys as the calculator's company policy). Labels/defaults are
 // loaded from /kalkulator/api/hub-policy when available; this list is the fallback.
@@ -182,11 +188,11 @@ async function renderAdmin() {
             <td data-k="Status"><span class="badge ${u.approved ? "ok" : "wait"}">${u.approved ? "Approved" : "Pending"}</span></td>
             <td data-k="Apps"><div class="checks">${ADMIN_APPS.map(a => {
               const on = (u.apps || []).includes(a.id);
-              const role = (u.app_roles || {})[a.id] || DEFAULT_ROLE;
+              const role = (u.app_roles || {})[a.id] || defaultRole(a.id);
               return `<div class="app-row"><label><input type="checkbox" data-app="${a.id}" ${on ? "checked" : ""}> ${a.label}</label>
               <select class="app-role" data-role-for="${a.id}" aria-label="${esc(a.label)} role" ${on ? "" : "disabled"}>${APP_ROLES[a.id].map(([v, l]) =>
                 `<option value="${v}" ${v === role ? "selected" : ""}>${l}</option>`).join("")}</select>
-                <button type="button" class="perms-btn" data-perms="${a.id}" ${on ? "" : "disabled"}>Permissions${Object.keys(((u.app_perms || {})[a.id]) || {}).length ? " •" : ""}</button></div>`; }).join("")}</div></td>
+                ${a.noPerms ? "" : `<button type="button" class="perms-btn" data-perms="${a.id}" ${on ? "" : "disabled"}>Permissions${Object.keys(((u.app_perms || {})[a.id]) || {}).length ? " •" : ""}</button>`}</div>`; }).join("")}</div></td>
             <td class="act">${self ? '<span class="muted small">You</span>' :
               `<button class="ab ${u.approved ? "revoke" : "approve"}" data-approved="${u.approved ? 1 : 0}">${u.approved ? "Revoke" : "Approve"}</button>`}</td>
           </tr>`; }).join("")}</tbody>
@@ -254,7 +260,7 @@ async function renderAdmin() {
       };
       tr.querySelectorAll("button[data-perms]").forEach(pbtn => pbtn.addEventListener("click", () => openPerms(pbtn)));
       tr.querySelectorAll("select[data-role-for]").forEach(sel => sel.addEventListener("change", async () => {
-        const before = (current.app_roles || {})[sel.dataset.roleFor] || DEFAULT_ROLE;
+        const before = (current.app_roles || {})[sel.dataset.roleFor] || defaultRole(sel.dataset.roleFor);
         sel.disabled = true;
         try {
           const saved = await auth.updateUser(id, { app_roles: rolesNow() });

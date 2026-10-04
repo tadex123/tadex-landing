@@ -1,5 +1,17 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/crm",
+      "destination": "/kalkulator/crm",
+      "permanent": false
+    },
+    {
+      "source": "/crm/",
+      "destination": "/kalkulator/crm",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/kalkulator",

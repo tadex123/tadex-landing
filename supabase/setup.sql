@@ -13,6 +13,10 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+-- 1b) Full name (collected on "Request access", stored in auth user metadata `full_name` too).
+--     Visible through the same RLS as the rest of the row: the user themself and admins only.
+alter table public.profiles add column if not exists full_name text not null default '';
+
 -- 2) Helper: is the current user an admin? (security definer avoids RLS recursion)
 create or replace function public.is_admin()
 returns boolean
@@ -38,8 +42,8 @@ language plpgsql security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email)
-  values (new.id, new.email)
+  insert into public.profiles (id, email, full_name)
+  values (new.id, new.email, left(btrim(coalesce(new.raw_user_meta_data->>'full_name', '')), 120))
   on conflict (id) do nothing;
   if lower(new.email) = any (public.hub_owner_emails()) and new.email_confirmed_at is not null then
     update public.profiles set approved = true, is_admin = true, apps = array['calculator','app2'] where id = new.id;
@@ -128,3 +132,13 @@ update public.profiles p
  where u.id = p.id
    and lower(u.email) = any (public.hub_owner_emails())
    and u.email_confirmed_at is not null;
+
+-- 8) Backfill full_name for rows created before the column existed:
+--    from auth metadata, else the email prefix (e.g. "ana.petrovic" -> "Ana Petrovic").
+update public.profiles p
+   set full_name = left(coalesce(nullif(btrim(u.raw_user_meta_data->>'full_name'), ''),
+                                 initcap(regexp_replace(split_part(p.email, '@', 1), '[._-]+', ' ', 'g'))), 120)
+  from auth.users u
+ where u.id = p.id and p.full_name = '';
+update public.profiles set full_name = 'Tadija Saric'
+ where lower(email) = 'tadijasaric92@gmail.com' and full_name in ('', 'Tadijasaric92');

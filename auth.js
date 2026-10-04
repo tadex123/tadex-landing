@@ -62,7 +62,7 @@ function sb() {
 
 async function fetchProfile(client, userId) {
   const { data, error } = await client
-    .from("profiles").select("id,email,approved,is_admin,apps,created_at")
+    .from("profiles").select("id,email,full_name,approved,is_admin,apps,created_at")
     .eq("id", userId).maybeSingle();
   if (error) throw new AuthError("profile_error", "Could not load your account. Please try again.");
   return data;
@@ -83,9 +83,9 @@ function friendly(error) {
 const now = Date.now(), day = 86400000;
 const preview = {
   users: [
-    { id: "p1", email: "admin@example.com", approved: true, is_admin: true, apps: ["calculator", "app2"], created_at: new Date(now - 30 * day).toISOString() },
-    { id: "p2", email: "team.member@example.com", approved: true, is_admin: false, apps: ["calculator"], created_at: new Date(now - 12 * day).toISOString() },
-    { id: "p3", email: "new.colleague@example.com", approved: false, is_admin: false, apps: [], created_at: new Date(now - 1 * day).toISOString() },
+    { id: "p1", email: "admin@example.com", full_name: "Admin Example", approved: true, is_admin: true, apps: ["calculator", "app2"], created_at: new Date(now - 30 * day).toISOString() },
+    { id: "p2", email: "team.member@example.com", full_name: "Team Member", approved: true, is_admin: false, apps: ["calculator"], created_at: new Date(now - 12 * day).toISOString() },
+    { id: "p3", email: "new.colleague@example.com", full_name: "New Colleague", approved: false, is_admin: false, apps: [], created_at: new Date(now - 1 * day).toISOString() },
   ],
 };
 function previewSession() {
@@ -127,12 +127,14 @@ export async function signIn(email, password) {
 }
 
 /** Creates an account that waits for admin approval. */
-export async function requestAccess(email, password) {
+export async function requestAccess(email, password, fullName) {
   if (!isConfigured) throw new AuthError("not_connected", MSG.requestNotConnected);
+  const full_name = String(fullName || "").trim().slice(0, 120);
+  if (full_name.length < 2) throw new AuthError("signup_error", "Please enter your full name.");
   const client = await sb();
   const { data, error } = await client.auth.signUp({
     email, password,
-    options: { emailRedirectTo: location.origin + location.pathname },
+    options: { emailRedirectTo: location.origin + location.pathname, data: { full_name } },
   });
   if (error) throw new AuthError("signup_error", friendly(error));
   // If "Confirm email" is off, Supabase signs the user in right away; they're not approved yet, so sign out.
@@ -151,7 +153,7 @@ export async function listUsers() {
   if (previewMode) return preview.users.map(u => ({ ...u, apps: [...u.apps] }));
   const client = await sb();
   const { data, error } = await client
-    .from("profiles").select("id,email,approved,is_admin,apps,created_at")
+    .from("profiles").select("id,email,full_name,approved,is_admin,apps,created_at")
     .order("created_at", { ascending: false });
   if (error) throw new AuthError("admin_error", "Could not load users.");
   return data;

@@ -39,6 +39,8 @@ function setMode(m) {
   $("#toggle-lead").textContent = req ? "Already approved?" : "No account yet?";
   $("#password").autocomplete = req ? "new-password" : "current-password";
   $("#password").minLength = req ? 8 : 0;
+  $("#name-field").hidden = !req;
+  $("#full-name").required = req;
   setStatus("");
 }
 
@@ -46,11 +48,13 @@ async function onSubmit(e) {
   e.preventDefault();
   const email = $("#email").value.trim();
   const password = $("#password").value;
+  const fullName = $("#full-name").value.trim();
   const btn = $("#submit");
   btn.disabled = true; btn.classList.add("busy");
   try {
     if (mode === "request") {
-      await auth.requestAccess(email, password);
+      if (fullName.length < 2) { setStatus("Please enter your full name (Ime i prezime).", "error"); $("#full-name").focus(); return; }
+      await auth.requestAccess(email, password, fullName);
       $("#form").reset();
       setStatus("Your request was sent. You'll get access once the admin approves it.", "ok");
     } else {
@@ -68,8 +72,9 @@ async function onSubmit(e) {
 // ---------- Signed-in ----------
 function renderChip() {
   const { user, profile } = session;
-  $("#chip-initial").textContent = (user.email || "?").charAt(0).toUpperCase();
-  $("#chip-email").textContent = user.email;
+  $("#chip-initial").textContent = (profile.full_name || user.email || "?").charAt(0).toUpperCase();
+  $("#chip-email").textContent = profile.full_name || user.email;
+  $("#chip-email").title = user.email;
   $("#admin-link").hidden = !profile.is_admin;
 }
 
@@ -98,11 +103,12 @@ async function renderAdmin() {
     if (!users.length) { body.innerHTML = '<p class="muted">No users yet.</p>'; return; }
     body.innerHTML = `
       <table class="users">
-        <thead><tr><th>Email</th><th>Requested</th><th>Status</th><th>Apps</th><th><span class="sr">Action</span></th></tr></thead>
+        <thead><tr><th>Person</th><th>Role</th><th>Requested</th><th>Status</th><th>Apps</th><th><span class="sr">Action</span></th></tr></thead>
         <tbody>${users.map(u => {
           const self = u.id === session.user.id;
           return `<tr data-id="${esc(u.id)}">
-            <td data-k="Email" class="em">${esc(u.email)}${u.is_admin ? ' <span class="tag">Admin</span>' : ""}</td>
+            <td data-k="Person" class="who"><div><span class="who-name">${esc(u.full_name || "—")}</span><span class="who-email">${esc(u.email)}</span></div></td>
+            <td data-k="Role"><span class="role ${u.is_admin ? "admin" : "operator"}">${u.is_admin ? "Admin" : "Operator"}</span></td>
             <td data-k="Requested">${esc(fmtDate(u.created_at))}</td>
             <td data-k="Status"><span class="badge ${u.approved ? "ok" : "wait"}">${u.approved ? "Approved" : "Pending"}</span></td>
             <td data-k="Apps"><div class="checks">${ADMIN_APPS.map(a => `

@@ -48,6 +48,8 @@
    <div class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
    <h2 id="form-title">Sign in</h2>
    <form id="form" novalidate>
+    <label class="field request-only" id="name-field" hidden><span>Ime i prezime / Full name</span>
+     <input id="full-name" name="full_name" type="text" autocomplete="name" placeholder="Ime Prezime" maxlength="120"></label>
     <label class="field"><span>Email</span>
      <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
     <label class="field"><span>Password</span>

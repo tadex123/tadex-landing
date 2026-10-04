@@ -115,6 +115,13 @@ body:not([data-state="out"]) h1{font-size:clamp(2.2rem,5vw,3.6rem)}
 .users td{padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
 .users tr:last-child td{border-bottom:0}
 .em{font-weight:600;word-break:break-all}
+.who{min-width:0}
+.who-name{display:block;font-weight:700;color:var(--navy)}
+.who-email{display:block;font-size:.85rem;color:var(--muted);word-break:break-all}
+.role{display:inline-block;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:3px 9px;border-radius:6px}
+.role.admin{background:var(--blue-l);color:var(--blue-d)}
+.role.operator{background:#EEF1F5;color:#3A4A5C}
+.field[hidden]{display:none}
 .tag{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue-d);background:var(--blue-l);padding:2px 7px;border-radius:6px;margin-left:4px;word-break:normal}
 .badge{display:inline-block;font-size:.8rem;font-weight:700;padding:4px 10px;border-radius:999px}
 .badge.ok{background:#E3F6EC;color:#1D6B43}
@@ -140,6 +147,7 @@ body:not([data-state="out"]) h1{font-size:clamp(2.2rem,5vw,3.6rem)}
  .users td::before{content:attr(data-k);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;flex:none}
  .users td.act{justify-content:flex-end}
  .em{text-align:right}
+ .who{text-align:right}
 }
 @media (max-width:600px){
  .logo{padding:6px 10px;border-radius:12px}.logo img{height:26px}

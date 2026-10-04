@@ -19,6 +19,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <script type="module" src="app.js"></script>
+<script type="module" src="extras.js"></script>
 </head>
 <body class="booting" data-state="out">
 <header>
@@ -42,6 +43,11 @@
    <h1>Welcome back,<br><span class="hl">TADEX team</span></h1>
    <p class="sub" id="sub">Good to see you. This is your team space. Sign in to pick up where you left off.</p>
    <span class="preview-flag" id="preview-flag" hidden>Preview · sample data</span>
+   <figure class="thought no-admin" id="thought" aria-label="Misao dana / Thought of the day">
+    <span class="thought-k"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z"/></svg>Misao dana · Thought of the day</span>
+    <blockquote class="thought-bs" id="thought-bs" lang="bs"></blockquote>
+    <p class="thought-en" id="thought-en" lang="en"></p>
+   </figure>
   </div>
 
   <section class="card out-only" id="signin" aria-labelledby="form-title">
@@ -71,6 +77,12 @@
    <div id="admin-body"></div>
   </section>
  </div>
+ <section class="wrap route no-admin" aria-label="Put robe: Yiwu → Bosna i Hercegovina / Goods route: Yiwu → Bosnia and Herzegovina">
+  <div class="route-card">
+   <div class="route-head"><span class="route-k">Put robe · Goods route</span><span class="route-path">义乌 Yiwu <span aria-hidden="true">→</span> Bosna i Hercegovina</span></div>
+   <canvas id="route-canvas" class="route-canvas" role="img" aria-label="Animated map: shipments travelling from Yiwu, China to Sarajevo, Mostar, Banja Luka, Tuzla, Zenica and Bihać"></canvas>
+  </div>
+ </section>
 </main>
 
 <footer>

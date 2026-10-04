@@ -52,7 +52,7 @@ async function loadCalcPerms() {
 }
 
 // Fallback copy of the calculator's DIREKTOR_POLICY (src/lib/access.ts) if hub-policy is unreachable.
-const DIREKTOR_FALLBACK = { editArticles: true, editLineDuty: true, editRates: false, editFreight: false, editDefaultDuty: false, editMargin: false, editVat: false,
+const DIREKTOR_FALLBACK = { editArticles: true, editLineDuty: true, editRates: true, editFreight: false, editDefaultDuty: false, editMargin: true, editVat: false,
   seePrices: true, seeRates: true, seeFreight: true, seeDuty: true, seeMargin: true, seeVat: true, seeCost: true, seeVpc: true, seeMpc: true, seePdv: true, seeFormula: true };
 const HISTORY_PERMS = { operatorDefaults: { seeAll: false }, edit: [], see: [{ key: "seeAll", label: "Sees all calculations (all operators)" }] };
 const permsFor = app => app === "app2" ? Promise.resolve(HISTORY_PERMS) : loadCalcPerms();

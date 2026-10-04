@@ -162,3 +162,11 @@ body:not([data-state="out"]) .sub{max-width:640px}
 .checks .app-row{display:inline-flex;align-items:center;gap:8px}
 .app-role{font:inherit;font-size:.82rem;padding:4px 6px;border:1px solid #CBD5E1;border-radius:6px;background:#fff;color:inherit}
 .app-role:disabled{opacity:.45}
+.rank{font:inherit;font-size:.85rem;width:150px;max-width:100%;padding:5px 8px;border:1px solid #CBD5E1;border-radius:6px;background:#fff;color:inherit}
+.perms-btn{font:inherit;font-size:.78rem;font-weight:600;padding:4px 9px;border:1px solid #CBD5E1;border-radius:6px;background:#fff;color:var(--blue-d);cursor:pointer}
+.perms-btn:disabled{opacity:.45;cursor:default}
+tr.perm-row td{background:#F6FAFD;padding:14px 16px}
+.perms .perm-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:8px}
+.perms h4{margin:0 0 6px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:#3A4A5C}
+.perms .perm{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0;font-size:.88rem}
+.perms .perm select{font:inherit;font-size:.82rem;padding:3px 6px;border:1px solid #CBD5E1;border-radius:6px;background:#fff}

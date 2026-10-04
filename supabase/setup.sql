@@ -27,6 +27,20 @@ alter table public.profiles add constraint profiles_app_roles_shape check (
   and (not app_roles ? 'app2' or app_roles->>'app2' in ('admin', 'operator'))
 );
 
+-- 1d) Per-person rank (job title, e.g. Direktor, Voditelj, Komercijalista) and per-app permission
+--     overrides on top of the role defaults, e.g. {"calculator":{"seeMargin":true,"editArticles":false}}.
+--     The calculator reads them with the verified session and enforces them server-side. Admin-only writable.
+alter table public.profiles add column if not exists rank text not null default '';
+alter table public.profiles add column if not exists app_perms jsonb not null default '{}'::jsonb;
+alter table public.profiles drop constraint if exists profiles_rank_len;
+alter table public.profiles add constraint profiles_rank_len check (char_length(rank) <= 60);
+alter table public.profiles drop constraint if exists profiles_app_perms_shape;
+alter table public.profiles add constraint profiles_app_perms_shape check (
+  jsonb_typeof(app_perms) = 'object'
+  and (not app_perms ? 'calculator' or jsonb_typeof(app_perms->'calculator') = 'object')
+  and (not app_perms ? 'app2' or jsonb_typeof(app_perms->'app2') = 'object')
+);
+
 -- 2) Helper: is the current user an admin? (security definer avoids RLS recursion)
 create or replace function public.is_admin()
 returns boolean
@@ -109,7 +123,7 @@ create policy "profiles: admins update"
 revoke all on public.profiles from anon, authenticated;
 grant select on public.profiles to authenticated;
 -- Admins may change only these columns from the app. is_admin can only be changed here in the SQL Editor.
-grant update (approved, apps, app_roles) on public.profiles to authenticated;
+grant update (approved, apps, app_roles, rank, app_perms) on public.profiles to authenticated;
 
 -- 6) Guard: an admin can't revoke their own approval from the app (prevents locking yourself out)
 create or replace function public.guard_self_revoke()

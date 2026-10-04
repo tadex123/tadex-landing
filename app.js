@@ -13,6 +13,50 @@ const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", lab
 const APP_ROLES = { calculator: [["operator", "Operator"], ["admin", "Admin"]], app2: [["operator", "Operator"], ["admin", "Admin"]] };
 const DEFAULT_ROLE = "operator";
 
+// Calculator permission toggles (same keys as the calculator's company policy). Labels/defaults are
+// loaded from /kalkulator/api/hub-policy when available; this list is the fallback.
+const CALC_PERMS_FALLBACK = {
+  operatorDefaults: null,
+  edit: [["editArticles","Artikli"],["editLineDuty","Carina po artiklu"],["editRates","Kursevi"],["editFreight","Prijevoz"],
+         ["editDefaultDuty","Podrazumijevana carina"],["editMargin","Marža"],["editVat","PDV stopa"]].map(([key,label]) => ({ key, label })),
+  see: [["seePrices","Nabavne cijene"],["seeRates","Kursevi"],["seeFreight","Prijevoz"],["seeDuty","Carinske stope"],["seeMargin","Marža"],
+        ["seeVat","PDV stopa"],["seeCost","Trošak uvoza (prijevoz, carina, trošak)"],["seeVpc","VPC"],["seeMpc","MPC"],
+        ["seePdv","Tabla PDV-a"],["seeFormula","Objašnjenje računice"]].map(([key,label]) => ({ key, label })),
+};
+let calcPerms = null;
+async function loadCalcPerms() {
+  if (calcPerms) return calcPerms;
+  try {
+    const token = await auth.accessToken();
+    if (!token) throw new Error("no token");
+    const r = await fetch("/kalkulator/api/hub-policy", { headers: { Authorization: "Bearer " + token }, cache: "no-store" });
+    if (!r.ok) throw new Error("status " + r.status);
+    calcPerms = await r.json();
+  } catch { calcPerms = CALC_PERMS_FALLBACK; }
+  return calcPerms;
+}
+
+function permsEditor(u, perms) {
+  const over = ((u.app_perms || {}).calculator) || {};
+  const isAdmin = ((u.app_roles || {}).calculator) === "admin";
+  const defs = perms.operatorDefaults;
+  const row = (o) => {
+    const d = defs ? (defs[o.key] ? "yes" : "no") : null;
+    const v = o.key in over ? (over[o.key] ? "allow" : "deny") : "default";
+    return `<label class="perm"><span>${esc(o.label)}</span>
+      <select data-perm="${esc(o.key)}" ${isAdmin ? "disabled" : ""}>
+        <option value="default" ${v === "default" ? "selected" : ""}>Default${d ? (d === "yes" ? " (✓ yes)" : " (✕ no)") : ""}</option>
+        <option value="allow" ${v === "allow" ? "selected" : ""}>Allow</option>
+        <option value="deny" ${v === "deny" ? "selected" : ""}>Deny</option>
+      </select></label>`;
+  };
+  return `<div class="perms">
+    <p class="muted small">${isAdmin ? "Calculator Admin has full access; per-person overrides apply to Operators only." :
+      "Inherits the Operator defaults set in the calculator (Admin panel). Choose Allow / Deny to override for this person only."}</p>
+    <div class="perm-cols"><div><h4>Can edit</h4>${perms.edit.map(row).join("")}</div>
+    <div><h4>Can see</h4>${perms.see.map(row).join("")}</div></div></div>`;
+}
+
 // ?next=/kalkulator/... : where to go after sign-in (same-origin app paths only).
 const NEXT = (() => {
   const raw = new URLSearchParams(location.search).get("next") || "";
@@ -115,11 +159,12 @@ async function renderAdmin() {
     if (!users.length) { body.innerHTML = '<p class="muted">No users yet.</p>'; return; }
     body.innerHTML = `
       <table class="users">
-        <thead><tr><th>Person</th><th>Hub role</th><th>Requested</th><th>Status</th><th>Apps</th><th><span class="sr">Action</span></th></tr></thead>
+        <thead><tr><th>Person</th><th>Rank</th><th>Hub role</th><th>Requested</th><th>Status</th><th>Apps</th><th><span class="sr">Action</span></th></tr></thead>
         <tbody>${users.map(u => {
           const self = u.id === session.user.id;
           return `<tr data-id="${esc(u.id)}">
             <td data-k="Person" class="who"><div><span class="who-name">${esc(u.full_name || "—")}</span><span class="who-email">${esc(u.email)}</span></div></td>
+            <td data-k="Rank"><input class="rank" data-rank type="text" maxlength="60" placeholder="e.g. Komercijalista" value="${esc(u.rank || "")}" aria-label="Rank"></td>
             <td data-k="Hub role"><span class="role ${u.is_admin ? "admin" : "operator"}">${u.is_admin ? "Admin" : "Operator"}</span></td>
             <td data-k="Requested">${esc(fmtDate(u.created_at))}</td>
             <td data-k="Status"><span class="badge ${u.approved ? "ok" : "wait"}">${u.approved ? "Approved" : "Pending"}</span></td>
@@ -128,7 +173,8 @@ async function renderAdmin() {
               const role = (u.app_roles || {})[a.id] || DEFAULT_ROLE;
               return `<div class="app-row"><label><input type="checkbox" data-app="${a.id}" ${on ? "checked" : ""}> ${a.label}</label>
               <select class="app-role" data-role-for="${a.id}" aria-label="${esc(a.label)} role" ${on ? "" : "disabled"}>${APP_ROLES[a.id].map(([v, l]) =>
-                `<option value="${v}" ${v === role ? "selected" : ""}>${l}</option>`).join("")}</select></div>`; }).join("")}</div></td>
+                `<option value="${v}" ${v === role ? "selected" : ""}>${l}</option>`).join("")}</select>${a.id === "calculator" ?
+                ` <button type="button" class="perms-btn" data-perms ${on ? "" : "disabled"}>Permissions${Object.keys(((u.app_perms || {}).calculator) || {}).length ? " •" : ""}</button>` : ""}</div>`; }).join("")}</div></td>
             <td class="act">${self ? '<span class="muted small">You</span>' :
               `<button class="ab ${u.approved ? "revoke" : "approve"}" data-approved="${u.approved ? 1 : 0}">${u.approved ? "Revoke" : "Approve"}</button>`}</td>
           </tr>`; }).join("")}</tbody>
@@ -153,17 +199,52 @@ async function renderAdmin() {
           const saved = await auth.updateUser(id, { apps, app_roles });
           current.apps = saved.apps; current.app_roles = saved.app_roles;
           if (sel) sel.disabled = !cb.checked;
+          if (cb.dataset.app === "calculator" && pbtn) pbtn.disabled = !cb.checked;
           toast("Saved");
         }
         catch (e) { cb.checked = !cb.checked; toast(e.message, true); }
         finally { cb.disabled = false; }
       }));
+      const rank = tr.querySelector("input[data-rank]");
+      rank.addEventListener("change", async () => {
+        rank.disabled = true;
+        try { const saved = await auth.updateUser(id, { rank: rank.value }); current.rank = saved.rank; rank.value = saved.rank; toast("Saved"); }
+        catch (e) { rank.value = current.rank || ""; toast(e.message, true); }
+        finally { rank.disabled = false; }
+      });
+      const pbtn = tr.querySelector("button[data-perms]");
+      if (pbtn) pbtn.addEventListener("click", async () => {
+        const open = tr.nextElementSibling && tr.nextElementSibling.classList.contains("perm-row");
+        if (open) { tr.nextElementSibling.remove(); return; }
+        const perms = await loadCalcPerms();
+        const pr = document.createElement("tr");
+        pr.className = "perm-row";
+        pr.innerHTML = `<td colspan="8">${permsEditor(current, perms)}</td>`;
+        tr.after(pr);
+        pr.querySelectorAll("select[data-perm]").forEach(sel => sel.addEventListener("change", async () => {
+          const all = { ...(current.app_perms || {}) };
+          const calc = { ...(all.calculator || {}) };
+          const before = sel.dataset.perm in calc ? (calc[sel.dataset.perm] ? "allow" : "deny") : "default";
+          if (sel.value === "default") delete calc[sel.dataset.perm]; else calc[sel.dataset.perm] = sel.value === "allow";
+          all.calculator = calc;
+          sel.disabled = true;
+          try {
+            const saved = await auth.updateUser(id, { app_perms: all });
+            current.app_perms = saved.app_perms;
+            pbtn.textContent = "Permissions" + (Object.keys((saved.app_perms || {}).calculator || {}).length ? " •" : "");
+            toast("Saved");
+          } catch (e) { sel.value = before; toast(e.message, true); }
+          finally { sel.disabled = false; }
+        }));
+      });
       tr.querySelectorAll("select[data-role-for]").forEach(sel => sel.addEventListener("change", async () => {
         const before = (current.app_roles || {})[sel.dataset.roleFor] || DEFAULT_ROLE;
         sel.disabled = true;
         try {
           const saved = await auth.updateUser(id, { app_roles: rolesNow() });
           current.app_roles = saved.app_roles;
+          const pr = tr.nextElementSibling;
+          if (pr && pr.classList.contains("perm-row")) { pr.remove(); if (pbtn) pbtn.click(); }
           toast("Saved");
         }
         catch (e) { sel.value = before; toast(e.message, true); }

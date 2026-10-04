@@ -254,7 +254,7 @@ export function mountRoute(canvas) {
     cx.font = `600 ${small ? 8.5 : 10.5}px Inter, system-ui, sans-serif`; cx.fillStyle = "rgba(255,255,255,.92)";
     cx.shadowColor = "rgba(14,76,128,.8)"; cx.shadowBlur = 3;
     const off = small
-      ? { "Sarajevo": [5, 9], "Banja Luka": [-18, -6], "Tuzla": [5, -3], "Bihać": [-6, -7] }
+      ? { "Sarajevo": [5, 9], "Banja Luka": [-2, -6], "Tuzla": [5, -3] }
       : { "Sarajevo": [6, 11], "Mostar": [7, 9], "Banja Luka": [-22, -8], "Tuzla": [6, -4], "Zenica": [7, 4], "Bihać": [-10, -8] };
     for (const l of legs) { if (l.port !== "P") continue; const o = off[l.c.name]; if (o) cx.fillText(l.c.name, l.E[0] + o[0], l.E[1] + o[1]); }
     cx.font = `700 ${small ? 9 : 11}px Inter, system-ui, sans-serif`; cx.fillStyle = "#fff";

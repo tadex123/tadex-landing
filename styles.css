@@ -200,6 +200,6 @@ body[data-state="admin"] .no-admin{display:none!important}
 .route-band{position:relative;width:100%;background:linear-gradient(180deg,rgba(14,76,128,.0),rgba(14,76,128,.30) 18%,rgba(14,76,128,.34) 82%,rgba(14,76,128,0));border-top:1px solid rgba(255,255,255,.14);border-bottom:1px solid rgba(255,255,255,.14)}
 .route-canvas{display:block;width:100%;height:clamp(340px,36vw,560px)}
 @media (max-width:860px){.thought{max-width:none}}
-@media (max-width:600px){.route{margin-top:36px}.route-canvas{height:330px}.route-head{font-size:.72rem}.route-legend{gap:10px;font-size:.7rem}
+@media (max-width:600px){.thought-k{border-radius:10px;font-size:.7rem;letter-spacing:.1em}.thought-sep{display:none}.route{margin-top:36px}.route-canvas{height:330px}.route-head{font-size:.72rem}.route-legend{gap:10px;font-size:.7rem}
  .thought{padding:18px 16px;gap:13px;border-radius:20px}.thought-ic{width:42px;height:42px;border-radius:13px}.thought-ic svg{width:22px;height:22px}.thought-bs{font-size:1.3rem}.thought-en{font-size:.98rem}.thought::after{font-size:5rem;top:-10px}}
 @media (prefers-reduced-motion:reduce){.thought{animation:none}}

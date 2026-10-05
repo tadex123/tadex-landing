@@ -76,8 +76,10 @@
      <input id="full-name" name="full_name" type="text" autocomplete="name" placeholder="Ime Prezime" maxlength="120"></label>
     <label class="field"><span>Email</span>
      <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
-    <label class="field"><span>Password</span>
+    <label class="field" id="password-field"><span>Password</span>
      <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required></label>
+    <p class="forgot" id="forgot-row"><a href="#" id="forgot">Forgot password?</a></p>
+    <p class="reset-hint" id="reset-hint" hidden>Enter your email and we'll send you a link to choose a new password.</p>
     <button class="btn" id="submit" type="submit"><span id="submit-label">Sign in</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
     <p class="status" id="status" role="status" aria-live="polite"></p>
    </form>

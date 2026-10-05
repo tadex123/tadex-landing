@@ -132,13 +132,17 @@ function setState(state) {
 // ---------- Signed-out form ----------
 function setMode(m) {
   mode = m;
-  const req = m === "request";
-  $("#form-title").textContent = req ? "Request access" : "Sign in";
-  $("#submit-label").textContent = req ? "Send request" : "Sign in";
-  $("#toggle").textContent = req ? "Back to sign in" : "Request access";
-  $("#toggle-lead").textContent = req ? "Already approved?" : "No account yet?";
+  const req = m === "request", reset = m === "reset";
+  $("#form-title").textContent = req ? "Request access" : reset ? "Reset password" : "Sign in";
+  $("#submit-label").textContent = req ? "Send request" : reset ? "Send reset link" : "Sign in";
+  $("#toggle").textContent = req || reset ? "Back to sign in" : "Request access";
+  $("#toggle-lead").textContent = req ? "Already approved?" : reset ? "Remembered it?" : "No account yet?";
   $("#password").autocomplete = req ? "new-password" : "current-password";
   $("#password").minLength = req ? 8 : 0;
+  $("#password").required = !reset;
+  $("#password-field").hidden = reset;
+  $("#forgot-row").hidden = m !== "signin";
+  $("#reset-hint").hidden = !reset;
   $("#name-field").hidden = !req;
   $("#full-name").required = req;
   setStatus("");
@@ -152,7 +156,11 @@ async function onSubmit(e) {
   const btn = $("#submit");
   btn.disabled = true; btn.classList.add("busy");
   try {
-    if (mode === "request") {
+    if (mode === "reset") {
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setStatus("Please enter the email you use for TADEX Hub.", "error"); $("#email").focus(); return; }
+      await auth.requestPasswordReset(email);
+      setStatus(`If ${email} has a TADEX Hub account, a reset link is on its way. Open it on this or any device — it takes you to tadexhub.com to choose a new password.`, "ok");
+    } else if (mode === "request") {
       if (fullName.length < 2) { setStatus("Please enter your full name (Ime i prezime).", "error"); $("#full-name").focus(); return; }
       await auth.requestAccess(email, password, fullName);
       $("#form").reset();
@@ -377,10 +385,14 @@ async function doSignOut(e) {
 async function init() {
   $("#form").addEventListener("submit", onSubmit);
   $("#toggle").addEventListener("click", e => { e.preventDefault(); setMode(mode === "signin" ? "request" : "signin"); $("#email").focus(); });
+  $("#forgot").addEventListener("click", e => { e.preventDefault(); setMode("reset"); $("#email").focus(); });
   $("#signout").addEventListener("click", doSignOut);
   window.addEventListener("hashchange", route);
   if (auth.previewMode) $("#preview-flag").hidden = false;
-  setMode("signin");
+  // /?reset=1 (from an expired reset link on /auth/confirm) opens "Reset password" directly.
+  const wantsReset = new URLSearchParams(location.search).get("reset") === "1";
+  setMode(wantsReset ? "reset" : "signin");
+  if (wantsReset) history.replaceState(null, "", location.pathname + location.hash);
   let redirect = null;
   try {
     session = await auth.getSession();

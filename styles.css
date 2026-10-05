@@ -227,3 +227,10 @@ body:not([data-state="out"]) .inner>section{grid-column:1/-1}
 .clocks-diff{font-size:.84rem;font-weight:600;color:rgba(255,255,255,.9);text-align:center}
 @media (max-width:860px){body[data-state="apps"] .inner{grid-template-columns:1fr}.clocks{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}.clocks-k,.clocks-diff{grid-column:1/-1}.clock{padding:12px}.clock-hm{font-size:2rem}.clock-date{font-size:.78rem}}
 @media (max-width:380px){.clocks{grid-template-columns:1fr}}
+
+/* Forgot password / reset mode */
+.forgot{margin:-6px 0 12px!important;text-align:right;font-size:.86rem}
+.forgot a{color:var(--blue-d);font-weight:600;text-decoration:none}
+.forgot a:hover{text-decoration:underline}
+.forgot[hidden],.reset-hint[hidden],#password-field[hidden]{display:none}
+.reset-hint{margin:-6px 0 14px!important;font-size:.92rem}

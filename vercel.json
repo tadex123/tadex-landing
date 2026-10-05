@@ -14,6 +14,10 @@
   ],
   "rewrites": [
     {
+      "source": "/auth/confirm",
+      "destination": "/auth/confirm/index.html"
+    },
+    {
       "source": "/sb/:path*",
       "destination": "https://ichcxptnnzakwzlmixvk.supabase.co/:path*"
     },
@@ -37,6 +41,19 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/auth/confirm(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
         }
       ]
     }

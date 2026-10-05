@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TADEX Hub – Account</title>
+<meta name="robots" content="noindex, nofollow">
+<!-- The one-time token is in the URL: never send it to anyone in a Referer header. -->
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1E78B8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234FB3E8'/%3E%3Cpath d='M16 18h32v8H36v24h-8V26H16z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="modulepreload" href="/vendor/supabase.js">
+<link rel="stylesheet" href="/styles.css">
+<style>
+ .confirm .inner{grid-template-columns:minmax(0,520px);justify-content:center}
+ .confirm .card:hover{transform:none}
+ .confirm .card h2{margin-bottom:10px}
+ .confirm .lead{margin:0 0 18px!important}
+ .confirm .lock.ok{background:linear-gradient(135deg,#34C77B,#1E9E5A)}
+ .confirm .btn.link{margin-top:18px}
+ .confirm .spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--blue-d);animation:spin .8s linear infinite;margin:6px auto 4px}
+ @keyframes spin{to{transform:rotate(360deg)}}
+ .confirm [hidden]{display:none!important}
+</style>
+<script type="module" src="/auth-confirm.js"></script>
+</head>
+<body class="confirm" data-state="out">
+<header>
+ <div class="wrap bar">
+  <a class="logo" href="/" aria-label="TADEX Hub home"><img src="/assets/tadex-logo.png" alt="Tadex Group" width="350" height="100"></a>
+ </div>
+</header>
+<main class="hero">
+ <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grid-bg"></div>
+ <div class="wrap inner">
+  <section class="card" id="card" aria-live="polite">
+   <div class="lock" id="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+   <h2 id="title">One moment…</h2>
+   <p class="lead" id="lead">Checking your link.</p>
+   <div class="spinner" id="spinner"></div>
+   <form id="pw-form" novalidate hidden>
+    <label class="field"><span>New password</span>
+     <input id="pw1" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required></label>
+    <label class="field"><span>Repeat new password</span>
+     <input id="pw2" type="password" autocomplete="new-password" minlength="8" placeholder="••••••••" required></label>
+    <button class="btn" id="pw-submit" type="submit"><span id="pw-label">Save new password</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+   </form>
+   <p class="status" id="status" role="status"></p>
+   <a class="btn link" id="action" href="/" hidden><span id="action-label">Go to TADEX Hub</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </section>
+ </div>
+</main>
+<footer>
+ <div class="wrap foot"><span>© 2026 TADEX Group · tadexhub.com</span></div>
+</footer>
+</body>
+</html>

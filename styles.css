@@ -216,8 +216,8 @@ body:not([data-state="out"]) .inner>section{grid-column:1/-1}
  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:thought-in .8s cubic-bezier(.2,.7,.2,1) .3s both}
 .clocks-k{align-self:flex-start;display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.74rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;background:rgba(14,76,128,.28);border:1px solid rgba(255,255,255,.3);padding:3px 11px;border-radius:999px}
 .clock{padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.32)}
-.clock-city{display:flex;align-items:center;gap:8px;font-weight:800;font-size:1.02rem;letter-spacing:-.005em}
-.clock-zh{font-weight:700;color:rgba(255,255,255,.85)}
+.clock-city{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-weight:800;font-size:1.02rem;letter-spacing:-.005em}
+.clock-zh{font-weight:700;color:rgba(255,255,255,.85);white-space:nowrap}
 .clock-flag{display:inline-grid;place-items:center;min-width:28px;height:20px;padding:0 5px;border-radius:6px;background:linear-gradient(140deg,#fff,#8FD3F5);color:var(--deep);font-size:.66rem;font-weight:900;letter-spacing:.06em}
 .clock-time{display:flex;align-items:baseline;gap:4px;margin-top:4px;font-variant-numeric:tabular-nums;line-height:1}
 .clock-hm{font-size:clamp(2.3rem,4vw,3rem);font-weight:900;letter-spacing:-.02em;text-shadow:0 2px 14px rgba(14,76,128,.35)}

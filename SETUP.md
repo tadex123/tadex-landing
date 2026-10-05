@@ -28,6 +28,21 @@ The hub has its own accounts, separate from the app accounts.
 
 Supabase's built-in email sender only delivers to the project's team members and is limited to a few emails per hour. For co-workers to receive confirmation emails, set up custom SMTP under **Authentication → Emails → SMTP Settings** (e.g. Resend or Brevo, both have free plans).
 
+## Account emails (confirm, password reset, invite)
+
+Every account email opens **tadexhub.com directly**, never a `*.supabase.co` page (works from China too).
+
+- **Site URL** (Authentication → URL Configuration) = `https://tadexhub.com`; Redirect URLs allow `https://tadexhub.com/**`.
+- **Email templates** (Authentication → Emails → Templates: Confirm signup, Reset password, Invite user, Magic link) link to
+  `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email|recovery|invite|magiclink` instead of `{{ .ConfirmationURL }}`.
+  Source files: `supabase/email-templates/*.html` + `subjects.json`; apply with `bash -lc 'python3 supabase/email-templates/apply.py'`.
+- **`/auth/confirm`** (`auth/confirm/index.html` + `auth-confirm.js`) checks the one-time token through the same-origin `/sb` proxy:
+  signup confirmation → "Email confirmed, waiting for approval" (or straight into the hub if already approved);
+  password reset / invite → choose a password first (the token is only used on Save, so mail scanners can't burn it) → hub.
+  Expired or used links show a clear message and a "Send a new reset link" button.
+- **Forgot password?** on the sign-in card sends the reset email (`/?reset=1` opens that mode directly).
+- Email change + reauthentication keep Supabase's default templates (the hub has no email-change feature).
+
 ## Previews (only while not connected)
 
 - `/?preview=apps`: signed-in view with sample apps

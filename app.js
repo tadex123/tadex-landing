@@ -210,6 +210,55 @@ function teamCell(u, users) {
   </select>`;
 }
 
+// ---------- Who's online (Admin only) ----------
+const ONLINE_MS = 150000; // no heartbeat for 2.5 min (heartbeat is every 45 s) = offline
+const APP_NAMES = { hub: "TADEX Hub", kalkulator: "Kalkulator", historija: "Povijest kalkulacija", crm: "CRM", ponude: "Ponude" };
+let presenceTimer = null;
+function ago(ms) {
+  const m = Math.round(ms / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} h ago`;
+  const d = Math.round(h / 24);
+  return d === 1 ? "yesterday" : `${d} days ago`;
+}
+function presenceOf(row, now) {
+  if (!row) return { online: false, text: "Never seen" };
+  const seen = Date.parse(row.last_seen_at);
+  const out = row.signed_out_at && Date.parse(row.signed_out_at) >= seen;
+  const where = APP_NAMES[row.app] || "TADEX Hub";
+  if (!out && now - seen < ONLINE_MS) return { online: true, text: `Online · ${where}`, seen };
+  return { online: false, text: out ? `Signed out ${ago(now - Date.parse(row.signed_out_at))}` : `Last seen ${ago(now - seen)} · ${where}`, seen };
+}
+async function refreshPresence(users) {
+  const box = $("#online");
+  if (!box) return;
+  let rows;
+  try { rows = await auth.listPresence(); } catch { box.querySelector(".online-list").innerHTML = '<p class="muted small">Could not load who\'s online.</p>'; return; }
+  const now = Date.now(), by = new Map(rows.map(r => [r.user_id, r]));
+  const people = users.filter(u => u.approved).map(u => ({ u, p: presenceOf(by.get(u.id), now) }))
+    .sort((a, b) => (b.p.online - a.p.online) || ((b.p.seen || 0) - (a.p.seen || 0)));
+  const n = people.filter(x => x.p.online).length;
+  box.querySelector(".online-count").textContent = n === 1 ? "1 online" : `${n} online`;
+  box.querySelector(".online-list").innerHTML = people.map(({ u, p }) => `
+    <li class="pres-item${p.online ? " on" : ""}" data-pres-id="${esc(u.id)}">
+      <span class="pres-dot${p.online ? " on" : ""}" aria-hidden="true"></span>
+      <span class="pres-name">${esc(u.full_name || u.email)}${u.id === session.user.id ? ' <span class="muted small">(you)</span>' : ""}</span>
+      <span class="pres-when" title="${p.seen ? esc(new Date(p.seen).toLocaleString()) : ""}">${esc(p.text)}</span>
+    </li>`).join("") || '<li class="muted small">No approved people yet.</li>';
+  document.querySelectorAll("tr[data-id] .who-dot").forEach(dot => {
+    const p = presenceOf(by.get(dot.closest("tr").dataset.id), now);
+    dot.classList.toggle("on", p.online); dot.title = p.text;
+  });
+  box.dataset.updated = String(now);
+}
+function startPresence(users) {
+  clearInterval(presenceTimer);
+  refreshPresence(users);
+  presenceTimer = setInterval(() => { if (document.body.dataset.state !== "admin") { clearInterval(presenceTimer); presenceTimer = null; return; } if (document.visibilityState === "visible") refreshPresence(users); }, 30000);
+}
+
 async function renderAdmin() {
   const body = $("#admin-body");
   body.innerHTML = '<p class="muted">Loading users…</p>';
@@ -217,12 +266,16 @@ async function renderAdmin() {
     const users = await auth.listUsers();
     if (!users.length) { body.innerHTML = '<p class="muted">No users yet.</p>'; return; }
     body.innerHTML = `
+      <section class="online" id="online" aria-labelledby="online-title">
+        <div class="online-head"><h3 id="online-title"><span class="pres-dot on" aria-hidden="true"></span>Who's online</h3><span class="online-count"></span><span class="muted small online-note">Updates every 30 s · offline after 2–3 min without activity</span></div>
+        <ul class="online-list"><li class="muted small">Loading…</li></ul>
+      </section>
       <table class="users">
         <thead><tr><th>Person</th><th>Rank</th><th>Hub role</th><th>Requested</th><th>Status</th><th>Apps</th><th>Team (Direktor)</th><th><span class="sr">Action</span></th></tr></thead>
         <tbody>${users.map(u => {
           const self = u.id === session.user.id;
           return `<tr data-id="${esc(u.id)}">
-            <td data-k="Person" class="who"><div><span class="who-name">${esc(u.full_name || "—")}</span><span class="who-email">${esc(u.email)}</span></div></td>
+            <td data-k="Person" class="who"><div><span class="who-name"><span class="who-dot" aria-hidden="true"></span>${esc(u.full_name || "—")}</span><span class="who-email">${esc(u.email)}</span></div></td>
             <td data-k="Rank"><input class="rank" data-rank type="text" maxlength="60" placeholder="e.g. Komercijalista" value="${esc(u.rank || "")}" aria-label="Rank"></td>
             <td data-k="Hub role"><span class="role ${u.is_admin ? "admin" : "operator"}">${u.is_admin ? "Admin" : "Operator"}</span></td>
             <td data-k="Requested">${esc(fmtDate(u.created_at))}</td>
@@ -239,6 +292,7 @@ async function renderAdmin() {
               `<button class="ab ${u.approved ? "revoke" : "approve"}" data-approved="${u.approved ? 1 : 0}">${u.approved ? "Revoke" : "Approve"}</button>`}</td>
           </tr>`; }).join("")}</tbody>
       </table>`;
+    startPresence(users);
     body.querySelectorAll("tr[data-id]").forEach(tr => {
       const id = tr.dataset.id;
       const current = users.find(x => x.id === id);
@@ -363,6 +417,7 @@ function goNext() {
 
 function renderSignedIn() {
   if (goNext()) return;
+  auth.startHeartbeat("hub");
   renderChip();
   if (auth.previewMode === "admin" && !location.hash) history.replaceState(null, "", "#admin");
   route();
@@ -370,6 +425,7 @@ function renderSignedIn() {
 
 async function doSignOut(e) {
   e.preventDefault();
+  auth.stopHeartbeat();
   await auth.signOut();
   session = null;
   if (auth.previewMode) { location.href = location.pathname; return; }

@@ -234,3 +234,22 @@ body:not([data-state="out"]) .inner>section{grid-column:1/-1}
 .forgot a:hover{text-decoration:underline}
 .forgot[hidden],.reset-hint[hidden],#password-field[hidden]{display:none}
 .reset-hint{margin:-6px 0 14px!important;font-size:.92rem}
+
+/* Who's online (Admin) */
+.online{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:18px;color:var(--navy)}
+.online-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.online-head h3{font-size:1.05rem;font-weight:800;display:flex;align-items:center;gap:8px;margin:0}
+.online-count{background:#E7F8EF;color:#17804A;font-weight:700;font-size:.82rem;padding:3px 10px;border-radius:999px}
+.online-note{margin-left:auto}
+.online-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.pres-item{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center;padding:9px 12px;border-radius:12px;background:#F7FBFE;border:1px solid var(--line)}
+.pres-item.on{background:#F1FBF5;border-color:#C9EDD7}
+.pres-name{font-weight:600;font-size:.94rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pres-when{grid-column:2;font-size:.82rem;color:var(--muted)}
+.pres-item.on .pres-when{color:#17804A;font-weight:600}
+.pres-dot,.who-dot{width:10px;height:10px;border-radius:50%;background:#B8C6D3;display:inline-block;flex:none}
+.pres-dot.on,.who-dot.on{background:#22C55E;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
+.pres-item .pres-dot{grid-row:1/3}
+.who-dot{width:8px;height:8px;margin-right:7px;vertical-align:middle}
+.who-dot.on{box-shadow:0 0 0 2px rgba(34,197,94,.2)}
+@media (max-width:600px){.online-note{margin-left:0;width:100%}}

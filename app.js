@@ -237,7 +237,9 @@ async function refreshPresence(users) {
   let rows;
   try { rows = await auth.listPresence(); } catch { box.querySelector(".online-list").innerHTML = '<p class="muted small">Could not load who\'s online.</p>'; return; }
   const now = Date.now(), by = new Map(rows.map(r => [r.user_id, r]));
-  const people = users.filter(u => u.approved).map(u => ({ u, p: presenceOf(by.get(u.id), now) }))
+  // The admin looking at this is online by definition (their own first heartbeat may still be in flight).
+  const me = session.user.id;
+  const people = users.filter(u => u.approved).map(u => ({ u, p: u.id === me ? { online: true, text: "Online · TADEX Hub", seen: now } : presenceOf(by.get(u.id), now) }))
     .sort((a, b) => (b.p.online - a.p.online) || ((b.p.seen || 0) - (a.p.seen || 0)));
   const n = people.filter(x => x.p.online).length;
   box.querySelector(".online-count").textContent = n === 1 ? "1 online" : `${n} online`;
@@ -248,7 +250,8 @@ async function refreshPresence(users) {
       <span class="pres-when" title="${p.seen ? esc(new Date(p.seen).toLocaleString()) : ""}">${esc(p.text)}</span>
     </li>`).join("") || '<li class="muted small">No approved people yet.</li>';
   document.querySelectorAll("tr[data-id] .who-dot").forEach(dot => {
-    const p = presenceOf(by.get(dot.closest("tr").dataset.id), now);
+    const id = dot.closest("tr").dataset.id;
+    const p = id === me ? { online: true, text: "Online" } : presenceOf(by.get(id), now);
     dot.classList.toggle("on", p.online); dot.title = p.text;
   });
   box.dataset.updated = String(now);

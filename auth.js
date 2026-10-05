@@ -1,5 +1,6 @@
 // TADEX Hub auth module.
-// Public interface: signIn, signOut, getSession, requestAccess (+ admin helpers listUsers, updateUser).
+// Public interface: signIn, signOut, getSession, requestAccess, requestPasswordReset,
+// verifyEmailLink + setNewPassword (used by /auth/confirm) (+ admin helpers listUsers, updateUser).
 // Backend: Supabase (supabase-js v2, vendored), configured in config.js.
 // Without config the hub is "not connected": submissions show a message, and
 // ?preview=apps | ?preview=noapps | ?preview=admin render sample data for design review only.
@@ -77,6 +78,9 @@ function friendly(error) {
   if (/password/i.test(m) && /(at least|characters|weak)/i.test(m)) return m;
   if (/not authori[sz]ed/i.test(m) || /error sending/i.test(m)) return "We couldn't send the confirmation email right now. Please contact your admin.";
   if (/rate limit/i.test(m)) return "Too many attempts. Please wait a moment and try again.";
+  const wait = m.match(/only request this after (\d+) seconds?/i);
+  if (wait) return `Please wait ${wait[1]} seconds before asking for another email.`;
+  if (/should be different from the old password/i.test(m)) return "Please choose a password that is different from your old one.";
   return m || "Something went wrong. Please try again.";
 }
 
@@ -135,11 +139,57 @@ export async function requestAccess(email, password, fullName) {
   const client = await sb();
   const { data, error } = await client.auth.signUp({
     email, password,
-    options: { emailRedirectTo: location.origin + location.pathname, data: { full_name } },
+    options: { emailRedirectTo: CONFIRM_URL(), data: { full_name } },
   });
   if (error) throw new AuthError("signup_error", friendly(error));
   // If "Confirm email" is off, Supabase signs the user in right away; they're not approved yet, so sign out.
   if (data && data.session) await client.auth.signOut();
+  return true;
+}
+
+// Email links (signup confirmation, password reset, invite) point straight at tadexhub.com/auth/confirm
+// (email templates use {{ .SiteURL }}/auth/confirm?token_hash=…&type=…), never at *.supabase.co.
+// The page verifies the one-time token through our same-origin /sb proxy, so it also works from China.
+const CONFIRM_URL = () => location.origin + "/auth/confirm";
+
+/** Sends a password-reset email (no error for unknown emails: Supabase does not reveal whether an account exists). */
+export async function requestPasswordReset(email) {
+  if (!isConfigured) throw new AuthError("not_connected", MSG.notConnected);
+  const client = await sb();
+  const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: CONFIRM_URL() });
+  if (error) throw new AuthError("reset_error", friendly(error));
+  return true;
+}
+
+const LINK_TYPES = { email: "email", signup: "email", magiclink: "email", recovery: "recovery", invite: "invite", email_change: "email_change" };
+export const linkKind = t => LINK_TYPES[t] || null;
+
+/**
+ * Verifies the one-time token from an email link and signs the person in.
+ * Resolves to { user, profile } (profile may be unapproved — the caller decides what to show).
+ */
+export async function verifyEmailLink(tokenHash, type) {
+  if (!isConfigured) throw new AuthError("not_connected", MSG.notConnected);
+  const kind = linkKind(type);
+  if (!tokenHash || !kind) throw new AuthError("bad_link", "This link is incomplete. Please open it again from the email.");
+  const client = await sb();
+  const { data, error } = await client.auth.verifyOtp({ token_hash: tokenHash, type: kind });
+  if (error || !data || !data.user) {
+    const m = (error && error.message) || "";
+    const expired = (error && (error.code === "otp_expired" || error.status === 403)) || /expired|invalid/i.test(m);
+    throw new AuthError(expired ? "link_expired" : "link_error", expired
+      ? "This link has expired or was already used."
+      : "That link didn't work: " + (m || "please try again."));
+  }
+  const profile = await fetchProfile(client, data.user.id).catch(() => null);
+  return { user: { id: data.user.id, email: data.user.email }, profile };
+}
+
+/** Sets a new password for the signed-in person (after a recovery/invite link). */
+export async function setNewPassword(password) {
+  const client = await sb();
+  const { error } = await client.auth.updateUser({ password });
+  if (error) throw new AuthError("password_error", friendly(error));
   return true;
 }
 

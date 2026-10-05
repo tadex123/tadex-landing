@@ -196,7 +196,37 @@ export async function setNewPassword(password) {
 export async function signOut() {
   if (previewMode || !isConfigured) return;
   const client = await sb();
+  await client.rpc("hub_presence_signed_out").then(() => {}, () => {}); // who's online: gone now, not in 2-3 min
   await client.auth.signOut();
+}
+
+// ---------- Who's online (heartbeat; only admins can read presence) ----------
+const HEARTBEAT_MS = 45000;
+let beatTimer = null;
+/** Starts the presence heartbeat (every 45 s while the tab is visible, immediately when it becomes visible). */
+export function startHeartbeat(app = "hub") {
+  if (previewMode || !isConfigured || beatTimer) return;
+  const beat = async () => {
+    if (document.visibilityState !== "visible") return;
+    try { const client = await sb(); const { data } = await client.auth.getSession(); if (data && data.session) await client.rpc("hub_heartbeat", { p_app: app }); } catch { /* offline: try next time */ }
+  };
+  beat();
+  beatTimer = setInterval(beat, HEARTBEAT_MS);
+  document.addEventListener("visibilitychange", () => { if (beatTimer && document.visibilityState === "visible") beat(); });
+}
+export function stopHeartbeat() { clearInterval(beatTimer); beatTimer = null; }
+
+/** Admin: presence rows { user_id, last_seen_at, app, signed_out_at } (RLS returns nothing to non-admins). */
+export async function listPresence() {
+  if (previewMode) {
+    const t = Date.now();
+    return [{ user_id: "p1", last_seen_at: new Date(t - 20000).toISOString(), app: "hub" },
+            { user_id: "p2", last_seen_at: new Date(t - 40 * 60000).toISOString(), app: "kalkulator" }];
+  }
+  const client = await sb();
+  const { data, error } = await client.from("hub_presence").select("user_id,last_seen_at,app,signed_out_at");
+  if (error) throw new AuthError("admin_error", "Could not load who's online.");
+  return data || [];
 }
 
 // ---------- Admin (RLS allows these only for profiles.is_admin = true) ----------

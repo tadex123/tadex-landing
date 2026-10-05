@@ -217,3 +217,45 @@ as $$
 $$;
 revoke all on function public.hub_my_team() from public, anon;
 grant execute on function public.hub_my_team() to authenticated;
+
+-- 1g) Who's online (Admin only, 5. 10. 2026). Every signed-in, approved person's browser sends a heartbeat
+--     (hub page + every app under /kalkulator) about every 45 s while the tab is visible.
+--     hub_presence keeps ONE row per person: last_seen_at, where (app), signed_out_at.
+--     Online = last heartbeat < 150 s ago and not signed out since. Only hub admins can read the table;
+--     nobody writes it directly (no insert/update/delete policies) — only through the two functions below,
+--     which only ever touch the caller's own row.
+create table if not exists public.hub_presence (
+  user_id uuid primary key references public.profiles (id) on delete cascade,
+  last_seen_at timestamptz not null default now(),
+  app text not null default 'hub',
+  signed_out_at timestamptz
+);
+alter table public.hub_presence enable row level security;
+revoke all on public.hub_presence from anon, authenticated;
+grant select on public.hub_presence to authenticated;
+drop policy if exists "presence: admins read" on public.hub_presence;
+create policy "presence: admins read" on public.hub_presence for select to authenticated using (public.is_admin());
+
+create or replace function public.hub_heartbeat(p_app text default 'hub')
+returns void
+language sql volatile security definer
+set search_path = public
+as $$
+  insert into public.hub_presence as hp (user_id, last_seen_at, app, signed_out_at)
+  select p.id, now(), case when p_app in ('hub', 'kalkulator', 'historija', 'crm', 'ponude') then p_app else 'hub' end, null
+    from public.profiles p
+   where p.id = auth.uid() and p.approved
+  on conflict (user_id) do update set last_seen_at = excluded.last_seen_at, app = excluded.app, signed_out_at = null;
+$$;
+revoke all on function public.hub_heartbeat(text) from public, anon;
+grant execute on function public.hub_heartbeat(text) to authenticated;
+
+create or replace function public.hub_presence_signed_out()
+returns void
+language sql volatile security definer
+set search_path = public
+as $$
+  update public.hub_presence set signed_out_at = now() where user_id = auth.uid();
+$$;
+revoke all on function public.hub_presence_signed_out() from public, anon;
+grant execute on function public.hub_presence_signed_out() to authenticated;

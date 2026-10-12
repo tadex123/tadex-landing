@@ -15,9 +15,19 @@ const APPS = [
         icon: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15.5h5M10 8.5h2"/>' }
     : { id: "app3", title: "Coming soon", label: "Reserved for a new app", href: "#", placeholder: true, public: true,
         icon: '<path d="M12 5v14M5 12h14"/>' },
+  // Unfinished transport suite (Grok Build frame). Admin always sees these; others only after Admin enables.
+  { id: "posiljke", title: "Pošiljke", label: "Nacrt · Admin", href: "/kalkulator/posiljke", adminDraft: true,
+    icon: '<path d="M3 7h18v10H3z"/><path d="M3 11h18"/><path d="M7 7V5h4v2"/>' },
+  { id: "ture", title: "Ture", label: "Nacrt · Admin", href: "/kalkulator/ture", adminDraft: true,
+    icon: '<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M3 13V8h9l4 5h3v5h-2"/><path d="M3 13h10"/>' },
+  { id: "flota", title: "Flota · Vozni park", label: "Nacrt · Admin", href: "/kalkulator/flota", adminDraft: true,
+    icon: '<rect x="3" y="10" width="18" height="7" rx="1.5"/><path d="M6 10V7h7l3 3"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/>' },
 ];
 const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }, { id: "crm", label: "CRM", noPerms: true },
-  ...(QUOTES_ENABLED ? [{ id: "app3", label: "Ponude · Quotations", noPerms: true }] : [])];
+  ...(QUOTES_ENABLED ? [{ id: "app3", label: "Ponude · Quotations", noPerms: true }] : []),
+  { id: "posiljke", label: "Pošiljke (nacrt)", noPerms: true },
+  { id: "ture", label: "Ture (nacrt)", noPerms: true },
+  { id: "flota", label: "Flota (nacrt)", noPerms: true }];
 // One role model for every hub app: Admin / Direktor / Operator (Operator default). Enforced server-side by each app.
 // Calculator: Admin = full + company settings + Operator policy + export; Direktor = full view, edits articles and
 //   per-line duty, sees the team (read-only); Operator = company Operator defaults + per-person overrides.
@@ -26,7 +36,7 @@ const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", lab
 // CRM: Operator owns and sees only their own clients; Direktor sees all, assigns/reassigns clients and
 //   approves final invoices; Admin = full (also deletes clients).
 const ROLE_CHOICES = [["admin", "Admin"], ["direktor", "Direktor"], ["operator", "Operator"]];
-const APP_ROLES = { calculator: ROLE_CHOICES, app2: ROLE_CHOICES, crm: ROLE_CHOICES, app3: ROLE_CHOICES };
+const APP_ROLES = { calculator: ROLE_CHOICES, app2: ROLE_CHOICES, crm: ROLE_CHOICES, app3: ROLE_CHOICES, posiljke: ROLE_CHOICES, ture: ROLE_CHOICES, flota: ROLE_CHOICES };
 const DEFAULT_ROLE = "operator";
 // Teams: each Operator belongs to at most ONE Direktor (profiles.direktor_id). A Direktor's default view in
 // Povijest kalkulacija and the CRM is their team (+ own); they can switch to "Svi". Admin sees everything.
@@ -188,7 +198,8 @@ function renderChip() {
 
 function renderApps() {
   const allowed = new Set(session.profile.apps || []);
-  const visible = APPS.filter(a => a.public || allowed.has(a.id));
+  const isAdmin = !!session.profile.is_admin;
+  const visible = APPS.filter(a => a.public || allowed.has(a.id) || (a.adminDraft && isAdmin));
   const grid = $("#apps-grid");
   const none = !visible.some(a => !a.public) ? '<p class="empty">No apps assigned yet. Contact your admin.</p>' : "";
   grid.innerHTML = none + visible.map(a => `
@@ -217,7 +228,7 @@ function teamCell(u, users) {
 
 // ---------- Who's online (Admin only) ----------
 const ONLINE_MS = 150000; // no heartbeat for 2.5 min (heartbeat is every 45 s) = offline
-const APP_NAMES = { hub: "TADEX Hub", kalkulator: "Kalkulator", historija: "Povijest kalkulacija", crm: "CRM", ponude: "Ponude" };
+const APP_NAMES = { hub: "TADEX Hub", kalkulator: "Kalkulator", historija: "Povijest kalkulacija", crm: "CRM", ponude: "Ponude", posiljke: "Pošiljke", ture: "Ture", flota: "Flota" };
 let presenceTimer = null;
 function ago(ms) {
   const m = Math.round(ms / 60000);

@@ -46,11 +46,16 @@ const defaultRole = () => DEFAULT_ROLE;
 // Calculator permission toggles (same keys as the calculator's company policy). Labels/defaults are
 // loaded from /kalkulator/api/hub-policy when available; this list is the fallback.
 const CALC_PERMS_FALLBACK = {
-  operatorDefaults: null,
+  // Mirrors calculator DEFAULT_POLICY (seeCost off for Operators until Admin Allows it).
+  operatorDefaults: {
+    editArticles: true, editLineDuty: false, editRates: false, editFreight: false, editDefaultDuty: false, editMargin: false, editVat: false,
+    seePrices: true, seeRates: false, seeFreight: false, seeDuty: true, seeMargin: false, seeVat: false,
+    seeCost: false, seeVpc: true, seeMpc: true, seePdv: false, seeFormula: false,
+  },
   edit: [["editArticles","Artikli"],["editLineDuty","Carina po artiklu"],["editRates","Kursevi"],["editFreight","Prijevoz"],
          ["editDefaultDuty","Podrazumijevana carina"],["editMargin","Marža"],["editVat","PDV stopa"]].map(([key,label]) => ({ key, label })),
   see: [["seePrices","Nabavne cijene"],["seeRates","Kursevi"],["seeFreight","Prijevoz"],["seeDuty","Carinske stope"],["seeMargin","Marža"],
-        ["seeVat","PDV stopa"],["seeCost","Trošak uvoza (prijevoz, carina, trošak)"],["seeVpc","VPC"],["seeMpc","MPC"],
+        ["seeVat","PDV stopa"],["seeCost","Trošak uvoza"],["seeVpc","VPC"],["seeMpc","MPC"],
         ["seePdv","Tabla PDV-a"],["seeFormula","Objašnjenje računice"]].map(([key,label]) => ({ key, label })),
 };
 let calcPerms = null;
@@ -104,7 +109,7 @@ function permsEditor(u, perms, app = "calculator") {
   return `<div class="perms"><h4>Calculator</h4>
     <p class="muted small">${role === "admin" ? "Calculator Admin always has full access (locked)." :
       role === "direktor" ? "Direktor defaults: sees everything (incl. exchange rates and margin) and edits articles and per-line duties; company settings (rates, freight, duty, margin, VAT) are read-only. Choose Allow / Deny to override for this person only." :
-      "Inherits the Operator defaults set in the calculator (Admin panel). Choose Allow / Deny to override for this person only."}</p>
+      "Inherits the Operator defaults set in the calculator (Admin panel). Choose Allow / Deny to override for this person only. Trošak uvoza is off by default for Operators — set Allow to unlock it."}</p>
     <div class="perm-cols"><div><h4>Can edit</h4>${perms.edit.map(row).join("")}</div>
     <div><h4>Can see</h4>${perms.see.map(row).join("")}</div></div></div>`;
 }

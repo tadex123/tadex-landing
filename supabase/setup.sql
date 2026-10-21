@@ -1,5 +1,9 @@
 -- TADEX Hub: Supabase setup. Run once in the Supabase SQL Editor.
 -- Safe to re-run.
+--
+-- Future NEW public tables (after 30 Oct 2026): Supabase no longer auto-GRANTs
+-- anon/authenticated/service_role. Copy supabase/_template_new_table.sql and follow
+-- supabase/MIGRATIONS.md — revoke + explicit GRANT + RLS. Do not re-GRANT old tables.
 
 -- 1) Profiles: one row per auth user
 create table if not exists public.profiles (

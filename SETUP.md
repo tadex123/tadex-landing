@@ -4,6 +4,11 @@ The hub has its own accounts, separate from the app accounts.
 
 **Status (Oct 4, 2026):** connected to Supabase project `tadex-hub` (ref `ichcxptnnzakwzlmixvk`, eu-central-1). Steps 1–5 are done. `setup.sql` has been applied, and `config.js` holds the project URL and the publishable (anon) key. Owner admins are automatic, see below.
 
+
+## New public tables (GRANTs after 30 Oct 2026)
+
+When you add a **new** table in the hub Supabase project, bake in explicit privileges — Supabase will stop auto-granting `public` tables to API roles on **30 Oct 2026** (existing tables stay OK). Copy `supabase/_template_new_table.sql`, follow the checklist in `supabase/MIGRATIONS.md`, and mirror the same `revoke` / `grant` / RLS block used for `profiles` and `hub_presence` in `setup.sql`. Do not blanket-GRANT old tables.
+
 ## Steps
 
 1. **Create a project.** Go to [supabase.com](https://supabase.com), open **New project** on the free plan, and pick an **EU region** (e.g. Frankfurt `eu-central-1`). Save the database password somewhere safe.

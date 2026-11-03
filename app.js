@@ -231,6 +231,73 @@ function teamCell(u, users) {
   </select>`;
 }
 
+
+/** True when this hub profile is Kalkulator Direktor (can grant team kurs). */
+function isCalculatorDirektor(profile) {
+  return ((profile && profile.app_roles) || {}).calculator === "direktor";
+}
+
+async function renderTeamKurs() {
+  const box = $("#team-kurs");
+  const body = $("#team-kurs-body");
+  if (!box || !body || !session) return;
+  if (!isCalculatorDirektor(session.profile)) {
+    box.hidden = true;
+    body.innerHTML = "";
+    return;
+  }
+  box.hidden = false;
+  body.innerHTML = '<p class="muted small">Učitavam tim…</p>';
+  let rows;
+  try { rows = await auth.listDirektorTeamKurs(); }
+  catch (e) {
+    body.innerHTML = `<p class="muted">${esc(e.message)}</p>`;
+    return;
+  }
+  if (!rows.length) {
+    body.innerHTML = '<p class="team-kurs-empty">Nema članova tima. Admin te mora dodijeliti kao Direktor članovima (polje Team).</p>';
+    return;
+  }
+  const opt = (cur, value, label) =>
+    `<option value="${value}" ${cur === value ? "selected" : ""}>${label}</option>`;
+  body.innerHTML = `<table class="team-kurs-table">
+    <thead><tr><th>Član</th><th>Uredi kurseve</th><th>Vidi kurseve</th></tr></thead>
+    <tbody>${rows.map(r => {
+      const edit = r.edit_rates || "";
+      const see = r.see_rates || "";
+      return `<tr data-member="${esc(r.id)}">
+        <td><strong>${esc(r.full_name || r.email)}</strong><div class="muted small">${esc(r.email)}</div></td>
+        <td><select class="app-role" data-kurs="editRates" aria-label="Uredi kurseve">
+          ${opt(edit, "", "Default (✕ no)")}${opt(edit, "allow", "Allow")}${opt(edit, "deny", "Deny")}
+        </select></td>
+        <td><select class="app-role" data-kurs="seeRates" aria-label="Vidi kurseve">
+          ${opt(see, "", "Default (✕ no)")}${opt(see, "allow", "Allow")}${opt(see, "deny", "Deny")}
+        </select></td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table>`;
+  body.querySelectorAll("select[data-kurs]").forEach(sel => {
+    sel.addEventListener("change", async () => {
+      const tr = sel.closest("tr");
+      const memberId = tr && tr.dataset.member;
+      const key = sel.dataset.kurs;
+      const before = sel.dataset.before || sel.value;
+      sel.dataset.before = sel.value;
+      sel.disabled = true;
+      try {
+        await auth.setDirektorTeamKurs(memberId, key, sel.value || "default");
+        toast("Spremljeno");
+      } catch (e) {
+        sel.value = before;
+        toast(e.message, true);
+      } finally {
+        sel.disabled = false;
+      }
+    });
+    sel.dataset.before = sel.value;
+  });
+}
+
 // ---------- Who's online (Admin only) ----------
 const ONLINE_MS = 150000; // no heartbeat for 2.5 min (heartbeat is every 45 s) = offline
 const APP_NAMES = { hub: "TADEX Hub", kalkulator: "Kalkulator", historija: "Povijest kalkulacija", crm: "CRM", ponude: "Ponude", posiljke: "Pošiljke", ture: "Ture", flota: "Flota" };
@@ -424,7 +491,7 @@ function toast(text, bad) {
 function route() {
   if (!session) return setState("out");
   if (location.hash === "#admin" && session.profile.is_admin) { setState("admin"); renderAdmin(); }
-  else { setState("apps"); renderApps(); }
+  else { setState("apps"); renderApps(); renderTeamKurs(); }
 }
 
 /** After sign-in: return to the app that sent the person here (if they have it). */

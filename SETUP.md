@@ -53,6 +53,7 @@ Every account email opens **tadexhub.com directly**, never a `*.supabase.co` pag
 - `/?preview=apps`: signed-in view with sample apps
 - `/?preview=noapps`: signed-in view with no apps assigned
 - `/?preview=admin`: admin panel with sample users
+- `/?preview=direktor`: Direktor view with “Moj tim — kursevi” (sample Magda)
 
 These show sample data only and stop working once `config.js` is filled in.
 

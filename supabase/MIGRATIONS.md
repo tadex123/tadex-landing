@@ -11,6 +11,7 @@ There is no `supabase/migrations/` runner and no CI gate. We keep idempotent `.s
 | --- | --- |
 | `setup.sql` | profiles, RLS, helpers, hub_presence — safe to re-run |
 | `quotes-storage.sql` | Storage bucket `quotes` + policies (Ponude photos) |
+| `direktor-team-kurs.sql` | RPCs: Direktor grants calculator editRates/seeRates to their team |
 | `_template_new_table.sql` | Copy this for every **new** public table |
 
 ## Rule (Tadija, 21 Oct 2026) — GRANTs on every new public table

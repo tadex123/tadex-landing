@@ -259,3 +259,12 @@ body:not([data-state="out"]) .inner>section{grid-column:1/-1}
 /* Admin panel never wider than the page: the users table scrolls inside the panel when it doesn't fit. */
 .inner>section.panel{min-width:0}
 #admin-body{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* Direktor team kurs grants (apps view) */
+.team-kurs{margin-top:18px}
+.team-kurs-lead{margin:-8px 0 16px;line-height:1.45}
+.team-kurs-table{width:100%;border-collapse:collapse;font-size:.95rem}
+.team-kurs-table th,.team-kurs-table td{text-align:left;padding:10px 8px;border-bottom:1px solid rgba(14,76,128,.12);vertical-align:middle}
+.team-kurs-table th{font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700}
+.team-kurs-table select.app-role{min-width:7.5rem}
+.team-kurs-empty{margin:0;color:var(--muted)}

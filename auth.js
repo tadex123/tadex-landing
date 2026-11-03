@@ -12,7 +12,7 @@ const SUPABASE_LIB = "/vendor/supabase.js";
 export const isConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
 const p = new URLSearchParams(location.search).get("preview");
-export const previewMode = !isConfigured && ["apps", "noapps", "admin"].includes(p) ? p : null;
+export const previewMode = !isConfigured && ["apps", "noapps", "admin", "direktor"].includes(p) ? p : null;
 
 export class AuthError extends Error {
   constructor(code, message) { super(message); this.code = code; }
@@ -88,15 +88,20 @@ function friendly(error) {
 const now = Date.now(), day = 86400000;
 const preview = {
   users: [
-    { id: "p1", email: "admin@example.com", full_name: "Admin Example", approved: true, is_admin: true, apps: ["calculator", "app2"], app_roles: { calculator: "admin", app2: "admin" }, created_at: new Date(now - 30 * day).toISOString() },
-    { id: "p2", email: "team.member@example.com", full_name: "Team Member", approved: true, is_admin: false, apps: ["calculator"], app_roles: { calculator: "operator" }, created_at: new Date(now - 12 * day).toISOString() },
-    { id: "p3", email: "new.colleague@example.com", full_name: "New Colleague", approved: false, is_admin: false, apps: [], app_roles: {}, created_at: new Date(now - 1 * day).toISOString() },
+    { id: "p1", email: "admin@example.com", full_name: "Admin Example", approved: true, is_admin: true, apps: ["calculator", "app2"], app_roles: { calculator: "admin", app2: "admin" }, app_perms: {}, direktor_id: null, created_at: new Date(now - 30 * day).toISOString() },
+    { id: "p4", email: "direktor@example.com", full_name: "Direktor Example", approved: true, is_admin: false, apps: ["calculator", "app2", "crm"], app_roles: { calculator: "direktor", app2: "direktor", crm: "direktor" }, app_perms: {}, direktor_id: null, created_at: new Date(now - 20 * day).toISOString() },
+    { id: "p2", email: "magda@example.com", full_name: "Magda Example", approved: true, is_admin: false, apps: ["calculator"], app_roles: { calculator: "operator" }, app_perms: {}, direktor_id: "p4", created_at: new Date(now - 12 * day).toISOString() },
+    { id: "p3", email: "new.colleague@example.com", full_name: "New Colleague", approved: false, is_admin: false, apps: [], app_roles: {}, app_perms: {}, direktor_id: null, created_at: new Date(now - 1 * day).toISOString() },
   ],
 };
 function previewSession() {
   if (previewMode === "admin") return { user: { id: "p1", email: "admin@example.com" }, profile: preview.users[0] };
+  if (previewMode === "direktor") {
+    const d = preview.users.find(u => u.id === "p4");
+    return { user: { id: d.id, email: d.email }, profile: { ...d } };
+  }
   if (previewMode === "noapps") return { user: { id: "px", email: "team.member@example.com" }, profile: { id: "px", email: "team.member@example.com", approved: true, is_admin: false, apps: [] } };
-  return { user: { id: "p2", email: "team.member@example.com" }, profile: { ...preview.users[1], apps: ["calculator", "app2"] } };
+  return { user: { id: "p2", email: "magda@example.com" }, profile: { ...preview.users.find(u => u.id === "p2"), apps: ["calculator", "app2"] } };
 }
 
 // ---------- Public API ----------
@@ -257,6 +262,48 @@ export async function updateUser(id, changes) {
   const client = await sb();
   const { data, error } = await client.from("profiles").update(patch).eq("id", id).select().maybeSingle();
   if (error || !data) throw new AuthError("admin_error", "Could not save the change.");
+  return data;
+}
+
+/** Direktor: team members + current calculator kurs overrides (editRates / seeRates). */
+export async function listDirektorTeamKurs() {
+  if (previewMode) {
+    if (previewMode !== "direktor") return [];
+    return preview.users
+      .filter(u => u.direktor_id === "p4" && u.approved)
+      .map(u => {
+        const calc = (u.app_perms && u.app_perms.calculator) || {};
+        const flag = (k) => (k in calc ? (calc[k] ? "allow" : "deny") : "");
+        return { id: u.id, email: u.email, full_name: u.full_name, edit_rates: flag("editRates"), see_rates: flag("seeRates") };
+      });
+  }
+  const client = await sb();
+  const { data, error } = await client.rpc("hub_direktor_team_kurs");
+  if (error) throw new AuthError("admin_error", friendly(error) || "Could not load your team.");
+  return data || [];
+}
+
+/** Direktor: set one kurs override for a team member. value: allow | deny | default */
+export async function setDirektorTeamKurs(memberId, key, value) {
+  if (!["editRates", "seeRates"].includes(key)) throw new AuthError("admin_error", "Invalid permission key.");
+  const v = value === "allow" || value === "deny" ? value : "default";
+  if (previewMode) {
+    const u = preview.users.find(x => x.id === memberId);
+    if (!u || u.direktor_id !== "p4") throw new AuthError("admin_error", "Person is not on your team.");
+    const all = { ...(u.app_perms || {}) };
+    const mine = { ...(all.calculator || {}) };
+    if (v === "default") delete mine[key]; else mine[key] = v === "allow";
+    all.calculator = mine;
+    u.app_perms = all;
+    return all;
+  }
+  const client = await sb();
+  const { data, error } = await client.rpc("hub_direktor_set_team_kurs", {
+    p_member: memberId,
+    p_key: key,
+    p_value: v,
+  });
+  if (error) throw new AuthError("admin_error", friendly(error) || "Could not save the change.");
   return data;
 }
 

@@ -1,7 +1,7 @@
 // TADEX Hub UI. Renders the signed-out form, the apps grid and the admin panel.
 import * as auth from "./auth.js";
 
-const QUOTES_ENABLED = !/(^|\.)tadexhub\.com$/.test(location.hostname);
+const QUOTES_ENABLED = true; // Ponude live on tadexhub.com (approved); tile for calculator or app3 access
 const APPS = [
   { id: "calculator", title: "Kalkulator", label: "Open app", href: "/kalkulator/",
     icon: '<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx="1"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>' },
@@ -9,12 +9,9 @@ const APPS = [
     icon: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4.5h4.5"/><path d="M12 7.5V12l3 2"/>' },
   { id: "crm", title: "CRM", label: "Open app", href: "/kalkulator/crm",
     icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M15.5 5.3a3 3 0 0 1 0 5.4M17.5 14.8c1.7.6 2.7 2.2 3 4.7"/>' },
-  // app3 = Ponude · 报价单 · Quotations: live on staging only until Tadija reviews it; on tadexhub.com it stays "Coming soon".
-  QUOTES_ENABLED
-    ? { id: "app3", title: "Ponude · 报价单 · Quotations", label: "Open app", href: "/kalkulator/ponude",
-        icon: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15.5h5M10 8.5h2"/>' }
-    : { id: "app3", title: "Coming soon", label: "Reserved for a new app", href: "#", placeholder: true, public: true,
-        icon: '<path d="M12 5v14M5 12h14"/>' },
+  // app3 = Ponude · 报价单 · Quotations (live). Visible with app3 or calculator access.
+  { id: "app3", title: "Ponude · 报价单 · Quotations", label: "Open app", href: "/kalkulator/ponude",
+      icon: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15.5h5M10 8.5h2"/>' },
   // Unfinished transport suite (Grok Build frame). Admin always sees these; others only after Admin enables.
   { id: "posiljke", title: "Pošiljke", label: "Nacrt · Admin", href: "/kalkulator/posiljke", adminDraft: true,
     icon: '<path d="M3 7h18v10H3z"/><path d="M3 11h18"/><path d="M7 7V5h4v2"/>' },
@@ -24,7 +21,7 @@ const APPS = [
     icon: '<rect x="3" y="10" width="18" height="7" rx="1.5"/><path d="M6 10V7h7l3 3"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/>' },
 ];
 const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }, { id: "crm", label: "CRM", noPerms: true },
-  ...(QUOTES_ENABLED ? [{ id: "app3", label: "Ponude · Quotations", noPerms: true }] : []),
+  { id: "app3", label: "Ponude · Quotations", noPerms: true },
   { id: "posiljke", label: "Pošiljke (nacrt)", noPerms: true },
   { id: "ture", label: "Ture (nacrt)", noPerms: true },
   { id: "flota", label: "Flota (nacrt)", noPerms: true }];
@@ -201,10 +198,17 @@ function renderChip() {
   $("#admin-link").hidden = !profile.is_admin;
 }
 
+function hasAppAccess(appId, allowed) {
+  if (allowed.has(appId)) return true;
+  // Ponude shares calculator access so the team does not need a separate Admin checkbox to open the live tile.
+  if (appId === "app3" && QUOTES_ENABLED && allowed.has("calculator")) return true;
+  return false;
+}
+
 function renderApps() {
   const allowed = new Set(session.profile.apps || []);
   const isAdmin = !!session.profile.is_admin;
-  const visible = APPS.filter(a => a.public || allowed.has(a.id) || (a.adminDraft && isAdmin));
+  const visible = APPS.filter(a => a.public || hasAppAccess(a.id, allowed) || (a.adminDraft && isAdmin));
   const grid = $("#apps-grid");
   const none = !visible.some(a => !a.public) ? '<p class="empty">No apps assigned yet. Contact your admin.</p>' : "";
   grid.innerHTML = none + visible.map(a => `
@@ -497,7 +501,8 @@ function route() {
 /** After sign-in: return to the app that sent the person here (if they have it). */
 function goNext() {
   if (!NEXT || !session || auth.previewMode) return false;
-  if (!(session.profile.apps || []).includes(NEXT.app)) {
+  const apps = session.profile.apps || [];
+  if (!hasAppAccess(NEXT.app, new Set(apps))) {
     setStatus("");
     toast("You don't have access to that app yet. Ask your admin.", true);
     return false;

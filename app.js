@@ -47,10 +47,11 @@ const defaultRole = () => DEFAULT_ROLE;
 // Calculator permission toggles (same keys as the calculator's company policy). Labels/defaults are
 // loaded from /kalkulator/api/hub-policy when available; this list is the fallback.
 const CALC_PERMS_FALLBACK = {
-  // Mirrors calculator DEFAULT_POLICY (seeCost off for Operators until Admin Allows it).
+  // Mirrors calculator DEFAULT_POLICY, except EUR/USD kurs: editRates and seeRates are open for
+  // every approved member (the live hub-policy response may still say false until kalkulator ships).
   operatorDefaults: {
-    editArticles: true, editLineDuty: false, editRates: false, editFreight: false, editDefaultDuty: false, editMargin: false, editVat: false,
-    seePrices: true, seeRates: false, seeFreight: false, seeDuty: true, seeMargin: false, seeVat: false,
+    editArticles: true, editLineDuty: false, editRates: true, editFreight: false, editDefaultDuty: false, editMargin: false, editVat: false,
+    seePrices: true, seeRates: true, seeFreight: false, seeDuty: true, seeMargin: false, seeVat: false,
     seeCost: false, seeVpc: true, seeMpc: true, seePdv: false, seeFormula: false,
   },
   edit: [["editArticles","Artikli"],["editLineDuty","Carina po artiklu"],["editRates","Kursevi"],["editFreight","Prijevoz"],
@@ -87,6 +88,10 @@ function permsEditor(u, perms, app = "calculator") {
     : role === "direktor" ? (app === "app2" ? { seeAll: true } : (perms.direktorPolicy || DIREKTOR_FALLBACK))
     : perms.operatorDefaults;
   const row = (o) => {
+    if (app === "calculator" && (o.key === "editRates" || o.key === "seeRates")) {
+      return `<label class="perm"><span>${esc(o.label)}</span>
+      <select data-fixed="yes" disabled><option selected>Allow (svi odobreni)</option></select></label>`;
+    }
     if (isAdmin) {
       return `<label class="perm"><span>${esc(o.label)}</span>
       <select data-perm="${esc(o.key)}" data-fixed="yes" disabled><option selected>Admin (✓ yes)</option></select></label>`;
@@ -109,8 +114,8 @@ function permsEditor(u, perms, app = "calculator") {
   }
   return `<div class="perms"><h4>Calculator</h4>
     <p class="muted small">${role === "admin" ? "Calculator Admin always has full access (locked)." :
-      role === "direktor" ? "Direktor defaults: sees everything (incl. exchange rates and margin) and edits articles and per-line duties; company settings (rates, freight, duty, margin, VAT) are read-only. Choose Allow / Deny to override for this person only." :
-      "Inherits the Operator defaults set in the calculator (Admin panel). Choose Allow / Deny to override for this person only. Trošak uvoza is off by default for Operators — set Allow to unlock it."}</p>
+      role === "direktor" ? "Direktor defaults: sees everything (incl. exchange rates and margin) and edits articles, per-line duties, and EUR/USD rates. Freight, default duty, margin and VAT stay on the role default until you choose Allow or Deny. Kursevi (EUR/USD) are open for every approved member." :
+      "Inherits the Operator defaults set in the calculator (Admin panel). Choose Allow / Deny to override for this person only. Kursevi (EUR/USD) are open for every approved member. Trošak uvoza is off by default for Operators — set Allow to unlock it."}</p>
     <div class="perm-cols"><div><h4>Can edit</h4>${perms.edit.map(row).join("")}</div>
     <div><h4>Can see</h4>${perms.see.map(row).join("")}</div></div></div>`;
 }
@@ -240,70 +245,28 @@ function teamCell(u, users) {
 }
 
 
-/** True when this hub profile is Kalkulator Direktor (can grant team kurs). */
+/** True when this hub profile is Kalkulator Direktor (sees the kurs notice). */
 function isCalculatorDirektor(profile) {
   return ((profile && profile.app_roles) || {}).calculator === "direktor";
 }
 
-async function renderTeamKurs() {
+function renderTeamKurs() {
   const box = $("#team-kurs");
   const body = $("#team-kurs-body");
   if (!box || !body || !session) return;
-  if (!isCalculatorDirektor(session.profile)) {
-    box.hidden = true;
-    body.innerHTML = "";
-    return;
+  const show = isCalculatorDirektor(session.profile);
+  box.hidden = !show;
+  body.innerHTML = "";
+}
+
+/** Permissions dot ignores the always-on kurs flags so they don't look like a personal override. */
+function permMark(perms, app) {
+  const mine = { ...(((perms || {})[app]) || {}) };
+  if (app === "calculator") {
+    delete mine.editRates;
+    delete mine.seeRates;
   }
-  box.hidden = false;
-  body.innerHTML = '<p class="muted small">Učitavam tim…</p>';
-  let rows;
-  try { rows = await auth.listDirektorTeamKurs(); }
-  catch (e) {
-    body.innerHTML = `<p class="muted">${esc(e.message)}</p>`;
-    return;
-  }
-  if (!rows.length) {
-    body.innerHTML = '<p class="team-kurs-empty">Nema članova tima. Admin te mora dodijeliti kao Direktor članovima (polje Team).</p>';
-    return;
-  }
-  const opt = (cur, value, label) =>
-    `<option value="${value}" ${cur === value ? "selected" : ""}>${label}</option>`;
-  body.innerHTML = `<table class="team-kurs-table">
-    <thead><tr><th>Član</th><th>Uredi kurseve</th><th>Vidi kurseve</th></tr></thead>
-    <tbody>${rows.map(r => {
-      const edit = r.edit_rates || "";
-      const see = r.see_rates || "";
-      return `<tr data-member="${esc(r.id)}">
-        <td><strong>${esc(r.full_name || r.email)}</strong><div class="muted small">${esc(r.email)}</div></td>
-        <td><select class="app-role" data-kurs="editRates" aria-label="Uredi kurseve">
-          ${opt(edit, "", "Default (✕ no)")}${opt(edit, "allow", "Allow")}${opt(edit, "deny", "Deny")}
-        </select></td>
-        <td><select class="app-role" data-kurs="seeRates" aria-label="Vidi kurseve">
-          ${opt(see, "", "Default (✕ no)")}${opt(see, "allow", "Allow")}${opt(see, "deny", "Deny")}
-        </select></td>
-      </tr>`;
-    }).join("")}</tbody>
-  </table>`;
-  body.querySelectorAll("select[data-kurs]").forEach(sel => {
-    sel.addEventListener("change", async () => {
-      const tr = sel.closest("tr");
-      const memberId = tr && tr.dataset.member;
-      const key = sel.dataset.kurs;
-      const before = sel.dataset.before || sel.value;
-      sel.dataset.before = sel.value;
-      sel.disabled = true;
-      try {
-        await auth.setDirektorTeamKurs(memberId, key, sel.value || "default");
-        toast("Spremljeno");
-      } catch (e) {
-        sel.value = before;
-        toast(e.message, true);
-      } finally {
-        sel.disabled = false;
-      }
-    });
-    sel.dataset.before = sel.value;
-  });
+  return Object.keys(mine).length ? " •" : "";
 }
 
 // ---------- Who's online (Admin only) ----------
@@ -385,7 +348,7 @@ async function renderAdmin() {
               return `<div class="app-row"><label><input type="checkbox" data-app="${a.id}" ${on ? "checked" : ""}> ${a.label}</label>
               <select class="app-role" data-role-for="${a.id}" aria-label="${esc(a.label)} role" ${on ? "" : "disabled"}>${APP_ROLES[a.id].map(([v, l]) =>
                 `<option value="${v}" ${v === role ? "selected" : ""}>${l}</option>`).join("")}</select>
-                ${a.noPerms ? "" : `<button type="button" class="perms-btn" data-perms="${a.id}" ${on ? "" : "disabled"}>Permissions${Object.keys(((u.app_perms || {})[a.id]) || {}).length ? " •" : ""}</button>`}</div>`; }).join("")}</div></td>
+                ${a.noPerms ? "" : `<button type="button" class="perms-btn" data-perms="${a.id}" ${on ? "" : "disabled"}>Permissions${permMark(u.app_perms, a.id)}</button>`}</div>`; }).join("")}</div></td>
             <td data-k="Team (Direktor)">${teamCell(u, users)}</td>
             <td class="act">${self ? '<span class="muted small">You</span>' :
               `<button class="ab ${u.approved ? "revoke" : "approve"}" data-approved="${u.approved ? 1 : 0}">${u.approved ? "Revoke" : "Approve"}</button>`}</td>
@@ -455,7 +418,7 @@ async function renderAdmin() {
           try {
             const saved = await auth.updateUser(id, { app_perms: all });
             current.app_perms = saved.app_perms;
-            pbtn.textContent = "Permissions" + (Object.keys((saved.app_perms || {})[app] || {}).length ? " •" : "");
+            pbtn.textContent = "Permissions" + permMark(saved.app_perms, app);
             toast("Saved");
           } catch (e) { sel.value = before; toast(e.message, true); }
           finally { sel.disabled = false; }

@@ -37,6 +37,8 @@ update public.profiles set app_roles = jsonb_set(app_roles, '{crm}', '"operator"
 -- 1d) Per-person rank (job title, e.g. Direktor, Voditelj, Komercijalista) and per-app permission
 --     overrides on top of the role defaults, e.g. {"calculator":{"seeMargin":true,"editArticles":false}}.
 --     The calculator reads them with the verified session and enforces them server-side. Admin-only writable.
+--     editRates and seeRates are not overridable: section 1h forces both true for every profile
+--     (EUR/USD kurs is open for every approved member). A stored false blocks that person.
 alter table public.profiles add column if not exists rank text not null default '';
 alter table public.profiles add column if not exists app_perms jsonb not null default '{}'::jsonb;
 alter table public.profiles drop constraint if exists profiles_rank_len;
@@ -264,8 +266,46 @@ $$;
 revoke all on function public.hub_presence_signed_out() from public, anon;
 grant execute on function public.hub_presence_signed_out() to authenticated;
 
--- 1h) Direktor team kurs grants (editRates / seeRates only, calculator app).
+-- 1h) EUR/USD kurs is open for every member (editRates / seeRates forced true).
 --     Same SQL as supabase/direktor-team-kurs.sql — keep them in sync when editing.
+create or replace function public.hub_open_kurs_perms(p jsonb)
+returns jsonb
+language sql
+immutable
+set search_path = public
+as $$
+  -- jsonb_set will not create a missing parent key, so '{}' would stay locked.
+  -- Merge onto calculator and keep every other permission on that object.
+  select jsonb_set(
+    coalesce(p, '{}'::jsonb),
+    '{calculator}',
+    coalesce(p -> 'calculator', '{}'::jsonb)
+      || jsonb_build_object('editRates', true, 'seeRates', true),
+    true
+  );
+$$;
+revoke all on function public.hub_open_kurs_perms(jsonb) from public, anon, authenticated;
+
+create or replace function public.hub_force_open_kurs()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  new.app_perms := public.hub_open_kurs_perms(new.app_perms);
+  return new;
+end;
+$$;
+revoke all on function public.hub_force_open_kurs() from public, anon, authenticated;
+
+drop trigger if exists profiles_kurs_open on public.profiles;
+create trigger profiles_kurs_open
+  before insert or update of app_perms on public.profiles
+  for each row execute function public.hub_force_open_kurs();
+
+update public.profiles
+   set app_perms = public.hub_open_kurs_perms(app_perms);
+
 create or replace function public.hub_is_calculator_direktor()
 returns boolean
 language sql stable security definer
@@ -326,7 +366,6 @@ set search_path = public
 as $$
 declare
   v_perms jsonb;
-  v_calc jsonb;
   v_norm text;
 begin
   if p_key is null or p_key not in ('editRates', 'seeRates') then
@@ -352,13 +391,7 @@ begin
    where id = p_member
    for update;
 
-  v_calc := coalesce(v_perms -> 'calculator', '{}'::jsonb);
-  if v_norm in ('default', '') then
-    v_calc := v_calc - p_key;
-  else
-    v_calc := jsonb_set(v_calc, array[p_key], to_jsonb(v_norm = 'allow'), true);
-  end if;
-  v_perms := jsonb_set(coalesce(v_perms, '{}'::jsonb), '{calculator}', v_calc, true);
+  v_perms := public.hub_open_kurs_perms(v_perms);
 
   update public.profiles
      set app_perms = v_perms

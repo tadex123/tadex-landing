@@ -245,6 +245,13 @@ export async function listUsers() {
   return data;
 }
 
+/** EUR/USD kurs stays Allow. A stored editRates/seeRates false is a Deny the calculator enforces. */
+function withOpenKurs(perms) {
+  const all = { ...(perms || {}) };
+  all.calculator = { ...(all.calculator || {}), editRates: true, seeRates: true };
+  return all;
+}
+
 /** changes: { approved?: boolean, apps?: string[], app_roles?: { [appId]: "admin" | "operator" } } */
 export async function updateUser(id, changes) {
   const patch = {};
@@ -252,7 +259,7 @@ export async function updateUser(id, changes) {
   if ("apps" in changes) patch.apps = changes.apps;
   if ("app_roles" in changes) patch.app_roles = changes.app_roles;
   if ("rank" in changes) patch.rank = String(changes.rank || "").trim().slice(0, 60);
-  if ("app_perms" in changes) patch.app_perms = changes.app_perms;
+  if ("app_perms" in changes) patch.app_perms = withOpenKurs(changes.app_perms);
   if ("direktor_id" in changes) patch.direktor_id = changes.direktor_id || null;
   if (previewMode) {
     const u = preview.users.find(x => x.id === id);
@@ -283,19 +290,15 @@ export async function listDirektorTeamKurs() {
   return data || [];
 }
 
-/** Direktor: set one kurs override for a team member. value: allow | deny | default */
-export async function setDirektorTeamKurs(memberId, key, value) {
+/** Older Moj tim clients. EUR/USD kurs stays Allow for every member (Deny is not stored). */
+export async function setDirektorTeamKurs(memberId, key) {
   if (!["editRates", "seeRates"].includes(key)) throw new AuthError("admin_error", "Invalid permission key.");
-  const v = value === "allow" || value === "deny" ? value : "default";
+  const v = "allow";
   if (previewMode) {
     const u = preview.users.find(x => x.id === memberId);
     if (!u || u.direktor_id !== "p4") throw new AuthError("admin_error", "Person is not on your team.");
-    const all = { ...(u.app_perms || {}) };
-    const mine = { ...(all.calculator || {}) };
-    if (v === "default") delete mine[key]; else mine[key] = v === "allow";
-    all.calculator = mine;
-    u.app_perms = all;
-    return all;
+    u.app_perms = withOpenKurs(u.app_perms);
+    return u.app_perms;
   }
   const client = await sb();
   const { data, error } = await client.rpc("hub_direktor_set_team_kurs", {

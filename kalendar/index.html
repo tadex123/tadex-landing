@@ -70,6 +70,7 @@ header {
   border: 1.5px solid var(--line);
   overflow: auto;
   box-shadow: 0 4px 16px rgba(15,42,68,.06);
+  margin-bottom: 32px;
 }
 table {
   width: 100%;
@@ -166,6 +167,73 @@ td.slot:hover { background: #f0f9ff; }
   font-size: 12px;
   color: var(--muted);
 }
+.month-section {
+  background: white;
+  border-radius: 16px;
+  border: 1.5px solid var(--line);
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(15,42,68,.06);
+}
+.month-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.month-header h2 { font-size: 1.2rem; font-weight: 800; }
+.month-nav { display: flex; gap: 8px; align-items: center; }
+.month-nav button {
+  background: white;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  width: 32px; height: 32px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.month-day-name {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 6px 0;
+}
+.month-day {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  position: relative;
+}
+.month-day:hover { background: var(--blue-l); }
+.month-day.other { color: #cbd5e1; }
+.month-day.today { background: var(--blue); color: white; }
+.month-day.has-tasks { background: #E0F2FE; }
+.month-day.has-high { background: #FEE2E2; }
+.task-dots {
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+  height: 6px;
+}
+.task-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+.task-dot.high { background: var(--danger); }
+.task-dot.medium { background: var(--gold); }
 </style>
 </head>
 <body>
@@ -188,6 +256,17 @@ td.slot:hover { background: #f0f9ff; }
 
   <div class="legend">
     Klikni na prazan sat da dodaš obavezu · Plava = nizak · Zlatna = srednji · Crvena = visok · Podaci se spremaju samo u tvom pregledniku
+  </div>
+
+  <div class="month-section" style="margin-top: 28px;">
+    <div class="month-header">
+      <h2 id="monthTitle">Mjesec</h2>
+      <div class="month-nav">
+        <button id="prevMonth">←</button>
+        <button id="nextMonth">→</button>
+      </div>
+    </div>
+    <div class="month-grid" id="monthGrid"></div>
   </div>
 </div>
 
@@ -234,7 +313,10 @@ td.slot:hover { background: #f0f9ff; }
 const STORAGE_KEY = "tadexhub_calendar_hours_v1";
 let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 let currentWeekStart = getMonday(new Date());
+let currentMonth = new Date();
+currentMonth.setDate(1);
 const HOURS = Array.from({length: 15}, (_, i) => i + 7);
+const MONTHS = ["Siječanj","Veljača","Ožujak","Travanj","Svibanj","Lipanj","Srpanj","Kolovoz","Rujan","Listopad","Studeni","Prosinac"];
 
 function getMonday(d) {
   const date = new Date(d);
@@ -261,7 +343,7 @@ function populateHours() {
   });
 }
 
-function render() {
+function renderWeek() {
   const table = document.getElementById("scheduleTable");
   const days = ["Ponedjeljak","Utorak","Srijeda","Četvrtak","Petak","Subota","Nedjelja"];
   const todayStr = formatDate(new Date());
@@ -326,6 +408,57 @@ function render() {
     `${currentWeekStart.getDate()}.${currentWeekStart.getMonth()+1}. – ${end.getDate()}.${end.getMonth()+1}.${end.getFullYear()}`;
 }
 
+function renderMonth() {
+  const grid = document.getElementById("monthGrid");
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  document.getElementById("monthTitle").textContent = `${MONTHS[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const todayStr = formatDate(new Date());
+
+  let html = "";
+  ["Pon","Uto","Sri","Čet","Pet","Sub","Ned"].forEach(d => {
+    html += `<div class="month-day-name">${d}</div>`;
+  });
+
+  for (let i = 0; i < startOffset; i++) {
+    const d = new Date(year, month, 1 - (startOffset - i));
+    html += `<div class="month-day other">${d.getDate()}</div>`;
+  }
+
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    const date = new Date(year, month, day);
+    const dateStr = formatDate(date);
+    const dayTasks = tasks.filter(t => t.date === dateStr);
+    const hasHigh = dayTasks.some(t => t.priority === "high");
+    const classes = ["month-day"];
+    if (dateStr === todayStr) classes.push("today");
+    else if (hasHigh) classes.push("has-high");
+    else if (dayTasks.length) classes.push("has-tasks");
+
+    html += `<div class="${classes.join(" ")}" data-date="${dateStr}" onclick="openModal('${dateStr}')">
+      ${day}
+      ${dayTasks.length ? `<div class="task-dots">${dayTasks.slice(0,3).map(t => `<div class="task-dot ${t.priority}"></div>`).join("")}</div>` : ""}
+    </div>`;
+  }
+
+  const totalCells = startOffset + lastDay.getDate();
+  const remaining = (7 - (totalCells % 7)) % 7;
+  for (let i = 1; i <= remaining; i++) {
+    html += `<div class="month-day other">${i}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function render() {
+  renderWeek();
+  renderMonth();
+}
+
 function openModal(dateStr = null, hour = "", task = null) {
   document.getElementById("modal").classList.add("open");
   document.getElementById("modalTitle").textContent = task ? "Uredi obavezu" : "Nova obaveza";
@@ -342,6 +475,8 @@ document.getElementById("addTaskBtn").onclick = () => openModal();
 document.getElementById("cancelBtn").onclick = closeModal;
 document.getElementById("prevWeek").onclick = () => { currentWeekStart.setDate(currentWeekStart.getDate() - 7); render(); };
 document.getElementById("nextWeek").onclick = () => { currentWeekStart.setDate(currentWeekStart.getDate() + 7); render(); };
+document.getElementById("prevMonth").onclick = () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderMonth(); };
+document.getElementById("nextMonth").onclick = () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderMonth(); };
 
 document.getElementById("taskForm").onsubmit = (e) => {
   e.preventDefault();

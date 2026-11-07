@@ -76,17 +76,29 @@ function renderChip() {
 function renderApps() {
   const allowed = new Set(session.profile.apps || []);
   const visible = APPS.filter(a => allowed.has(a.id));
+  // Private calendar tile — only for the owner
+  const isOwner = session.user.email === "tadijasaric92@gmail.com";
   const grid = $("#apps-grid");
-  if (!visible.length) {
+  let html = "";
+  if (isOwner) {
+    html += `
+      <a class="tile" href="/kalendar/">
+        <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+        <span class="tile-title">Moj Kalendar</span>
+        <span class="tile-label">Privatni raspored <span aria-hidden="true">→</span></span>
+      </a>`;
+  }
+  if (!visible.length && !isOwner) {
     grid.innerHTML = '<p class="empty">No apps assigned yet. Contact your admin.</p>';
     return;
   }
-  grid.innerHTML = visible.map(a => `
+  html += visible.map(a => `
     <a class="tile${a.placeholder ? " placeholder" : ""}" href="${a.href}"${a.placeholder ? ' data-placeholder="1"' : ""}>
       <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>
       <span class="tile-title">${esc(a.title)}</span>
       <span class="tile-label">${esc(a.label)}${a.placeholder ? "" : ' <span aria-hidden="true">→</span>'}</span>
     </a>`).join("");
+  grid.innerHTML = html;
   grid.querySelectorAll("[data-placeholder]").forEach(el => el.addEventListener("click", e => e.preventDefault()));
 }
 

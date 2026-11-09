@@ -217,10 +217,17 @@ function hasAppAccess(appId, allowed) {
 function renderApps() {
   const allowed = new Set(session.profile.apps || []);
   const isAdmin = !!session.profile.is_admin;
+  const isOwner = session.user.email === "tadijasaric92@gmail.com";
   const visible = APPS.filter(a => a.public || hasAppAccess(a.id, allowed) || (a.adminDraft && isAdmin));
   const grid = $("#apps-grid");
-  const none = !visible.some(a => !a.public) ? '<p class="empty">No apps assigned yet. Contact your admin.</p>' : "";
-  grid.innerHTML = none + visible.map(a => `
+  const ownerTile = isOwner ? `
+    <a class="tile" href="/kalendar/">
+      <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+      <span class="tile-title">Moj Kalendar</span>
+      <span class="tile-label">Privatni raspored <span aria-hidden="true">→</span></span>
+    </a>` : "";
+  const none = !isOwner && !visible.some(a => !a.public) ? '<p class="empty">No apps assigned yet. Contact your admin.</p>' : "";
+  grid.innerHTML = none + ownerTile + visible.map(a => `
     <a class="tile${a.placeholder ? " placeholder" : ""}" href="${a.href}"${a.placeholder ? ' data-placeholder="1"' : ""}>
       <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>
       <span class="tile-title">${esc(a.title)}</span>

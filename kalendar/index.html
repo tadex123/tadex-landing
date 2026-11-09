@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TADEX HUB – Moj Kalendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky: #8FD3F5;
+  --blue: #4FB3E8;
+  --blue-m: #2A93CC;
+  --blue-d: #1E78B8;
+  --deep: #0E4C80;
+  --blue-l: #E8F6FD;
+  --navy: #0F2A44;
+  --muted: #4A6178;
+  --line: #D6ECF8;
+  --gold: #F59E0B;
+  --danger: #DC2626;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  background: #f8fafc;
+  color: var(--navy);
+  min-height: 100vh;
+  padding: 20px 12px;
+}
+.wrap { max-width: 1400px; margin: 0 auto; }
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.logo-area h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
+.logo-area h1 span { color: var(--blue-d); }
+.week-nav { display: flex; align-items: center; gap: 10px; }
+.week-nav button {
+  background: white;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  width: 38px; height: 38px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--navy);
+}
+.week-nav button:hover { border-color: var(--blue); background: var(--blue-l); }
+#weekLabel { font-weight: 700; min-width: 170px; text-align: center; }
+.btn-primary {
+  background: linear-gradient(90deg, var(--blue-d), var(--blue));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(30,120,184,.25);
+}
+.schedule {
+  background: white;
+  border-radius: 16px;
+  border: 1.5px solid var(--line);
+  overflow: auto;
+  box-shadow: 0 4px 16px rgba(15,42,68,.06);
+  margin-bottom: 32px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+th, td {
+  border: 1px solid var(--line);
+  padding: 6px 4px;
+  text-align: center;
+  vertical-align: top;
+  min-width: 110px;
+}
+th {
+  background: var(--blue-l);
+  font-weight: 700;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+th.today { background: var(--blue); color: white; }
+.time-col {
+  width: 70px;
+  min-width: 70px;
+  background: #f1f5f9;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--muted);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+td.slot {
+  height: 48px;
+  cursor: pointer;
+  position: relative;
+  background: white;
+}
+td.slot:hover { background: #f0f9ff; }
+.task-block {
+  background: var(--blue-l);
+  border-left: 3px solid var(--blue);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+  text-align: left;
+  margin: 2px;
+  cursor: pointer;
+}
+.task-block.high { background: #FEF2F2; border-left-color: var(--danger); }
+.task-block.medium { background: #FFFBEB; border-left-color: var(--gold); }
+.task-title { font-weight: 600; line-height: 1.3; }
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,42,68,.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal.open { display: flex; }
+.modal-content {
+  background: white;
+  padding: 28px;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 30px 60px rgba(14,76,128,.3);
+}
+.modal-content h2 { margin-bottom: 18px; font-weight: 800; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; margin-bottom: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.form-group input, .form-group textarea, .form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  font: inherit;
+  background: #F7FBFE;
+}
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+.btn-secondary {
+  background: white;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.legend {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.month-section {
+  background: white;
+  border-radius: 16px;
+  border: 1.5px solid var(--line);
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(15,42,68,.06);
+}
+.month-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.month-header h2 { font-size: 1.2rem; font-weight: 800; }
+.month-nav { display: flex; gap: 8px; align-items: center; }
+.month-nav button {
+  background: white;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  width: 32px; height: 32px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.month-day-name {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 6px 0;
+}
+.month-day {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  position: relative;
+}
+.month-day:hover { background: var(--blue-l); }
+.month-day.other { color: #cbd5e1; }
+.month-day.today { background: var(--blue); color: white; }
+.month-day.has-tasks { background: #E0F2FE; }
+.month-day.has-high { background: #FEE2E2; }
+.task-dots {
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+  height: 6px;
+}
+.task-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+.task-dot.high { background: var(--danger); }
+.task-dot.medium { background: var(--gold); }
+body:not(.ready) { visibility: hidden; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo-area">
+      <h1>TADEX <span>HUB</span> · Moj Kalendar</h1>
+    </div>
+    <div class="week-nav">
+      <button id="prevWeek">←</button>
+      <span id="weekLabel"></span>
+      <button id="nextWeek">→</button>
+    </div>
+    <button class="btn-primary" id="addTaskBtn">+ Nova obaveza</button>
+  </header>
+
+  <div class="schedule">
+    <table id="scheduleTable"></table>
+  </div>
+
+  <div class="legend">
+    Klikni na prazan sat da dodaš obavezu · Plava = nizak · Zlatna = srednji · Crvena = visok · Podaci se spremaju samo u tvom pregledniku
+  </div>
+
+  <div class="month-section" style="margin-top: 28px;">
+    <div class="month-header">
+      <h2 id="monthTitle">Mjesec</h2>
+      <div class="month-nav">
+        <button id="prevMonth">←</button>
+        <button id="nextMonth">→</button>
+      </div>
+    </div>
+    <div class="month-grid" id="monthGrid"></div>
+  </div>
+</div>
+
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <h2 id="modalTitle">Nova obaveza</h2>
+    <form id="taskForm">
+      <input type="hidden" id="taskId">
+      <div class="form-group">
+        <label>Naslov</label>
+        <input type="text" id="title" required placeholder="npr. Sastanak sa dobavljačem">
+      </div>
+      <div class="form-group">
+        <label>Datum</label>
+        <input type="date" id="date" required>
+      </div>
+      <div class="form-group">
+        <label>Vrijeme (sat)</label>
+        <select id="hour">
+          <option value="">Cijeli dan / bez sata</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Prioritet</label>
+        <select id="priority">
+          <option value="low">Nizak</option>
+          <option value="medium" selected>Srednji</option>
+          <option value="high">Visok</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Opis (opcionalno)</label>
+        <textarea id="description" rows="2"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="cancelBtn" class="btn-secondary">Odustani</button>
+        <button type="submit" class="btn-primary">Spremi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "tadexhub_calendar_hours_v1";
+let tasks = [];
+let currentWeekStart = getMonday(new Date());
+let currentMonth = new Date();
+currentMonth.setDate(1);
+const HOURS = Array.from({length: 15}, (_, i) => i + 7);
+const MONTHS = ["Siječanj","Veljača","Ožujak","Travanj","Svibanj","Lipanj","Srpanj","Kolovoz","Rujan","Listopad","Studeni","Prosinac"];
+
+function getMonday(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  date.setDate(diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function formatDate(d) { return d.toISOString().split("T")[0]; }
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function populateHours() {
+  const sel = document.getElementById("hour");
+  sel.innerHTML = '<option value="">Cijeli dan / bez sata</option>';
+  HOURS.forEach(h => {
+    const opt = document.createElement("option");
+    opt.value = h;
+    opt.textContent = `${String(h).padStart(2,"0")}:00`;
+    sel.appendChild(opt);
+  });
+}
+
+function renderWeek() {
+  const table = document.getElementById("scheduleTable");
+  const days = ["Ponedjeljak","Utorak","Srijeda","Četvrtak","Petak","Subota","Nedjelja"];
+  const todayStr = formatDate(new Date());
+
+  let html = "<thead><tr><th class='time-col'>Sat</th>";
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(currentWeekStart);
+    date.setDate(date.getDate() + i);
+    const dateStr = formatDate(date);
+    const isToday = dateStr === todayStr;
+    html += `<th class="${isToday ? 'today' : ''}">${days[i]}<br><small>${date.getDate()}.${date.getMonth()+1}.</small></th>`;
+  }
+  html += "</tr></thead><tbody>";
+
+  html += "<tr><td class='time-col'>Cijeli dan</td>";
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(currentWeekStart);
+    date.setDate(date.getDate() + i);
+    const dateStr = formatDate(date);
+    const allDay = tasks.filter(t => t.date === dateStr && (t.hour === "" || t.hour == null));
+    html += `<td class="slot" data-date="${dateStr}" data-hour="">`;
+    allDay.forEach(t => {
+      html += `<div class="task-block ${t.priority}" onclick="editTask('${t.id}');event.stopPropagation()">
+        <div class="task-title">${escapeHtml(t.title)}</div>
+      </div>`;
+    });
+    html += "</td>";
+  }
+  html += "</tr>";
+
+  HOURS.forEach(h => {
+    html += `<tr><td class="time-col">${String(h).padStart(2,"0")}:00</td>`;
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(currentWeekStart);
+      date.setDate(date.getDate() + i);
+      const dateStr = formatDate(date);
+      const hourTasks = tasks.filter(t => t.date === dateStr && Number(t.hour) === h);
+      html += `<td class="slot" data-date="${dateStr}" data-hour="${h}">`;
+      hourTasks.forEach(t => {
+        html += `<div class="task-block ${t.priority}" onclick="editTask('${t.id}');event.stopPropagation()">
+          <div class="task-title">${escapeHtml(t.title)}</div>
+        </div>`;
+      });
+      html += "</td>";
+    }
+    html += "</tr>";
+  });
+
+  html += "</tbody>";
+  table.innerHTML = html;
+
+  table.querySelectorAll("td.slot").forEach(td => {
+    td.onclick = () => {
+      if (td.querySelector(".task-block")) return;
+      openModal(td.dataset.date, td.dataset.hour || "");
+    };
+  });
+
+  const end = new Date(currentWeekStart);
+  end.setDate(end.getDate() + 6);
+  document.getElementById("weekLabel").textContent =
+    `${currentWeekStart.getDate()}.${currentWeekStart.getMonth()+1}. – ${end.getDate()}.${end.getMonth()+1}.${end.getFullYear()}`;
+}
+
+function renderMonth() {
+  const grid = document.getElementById("monthGrid");
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  document.getElementById("monthTitle").textContent = `${MONTHS[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const todayStr = formatDate(new Date());
+
+  let html = "";
+  ["Pon","Uto","Sri","Čet","Pet","Sub","Ned"].forEach(d => {
+    html += `<div class="month-day-name">${d}</div>`;
+  });
+
+  for (let i = 0; i < startOffset; i++) {
+    const d = new Date(year, month, 1 - (startOffset - i));
+    html += `<div class="month-day other">${d.getDate()}</div>`;
+  }
+
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    const date = new Date(year, month, day);
+    const dateStr = formatDate(date);
+    const dayTasks = tasks.filter(t => t.date === dateStr);
+    const hasHigh = dayTasks.some(t => t.priority === "high");
+    const classes = ["month-day"];
+    if (dateStr === todayStr) classes.push("today");
+    else if (hasHigh) classes.push("has-high");
+    else if (dayTasks.length) classes.push("has-tasks");
+
+    html += `<div class="${classes.join(" ")}" data-date="${dateStr}" onclick="openModal('${dateStr}')">
+      ${day}
+      ${dayTasks.length ? `<div class="task-dots">${dayTasks.slice(0,3).map(t => `<div class="task-dot ${t.priority}"></div>`).join("")}</div>` : ""}
+    </div>`;
+  }
+
+  const totalCells = startOffset + lastDay.getDate();
+  const remaining = (7 - (totalCells % 7)) % 7;
+  for (let i = 1; i <= remaining; i++) {
+    html += `<div class="month-day other">${i}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function render() {
+  renderWeek();
+  renderMonth();
+}
+
+function openModal(dateStr = null, hour = "", task = null) {
+  document.getElementById("modal").classList.add("open");
+  document.getElementById("modalTitle").textContent = task ? "Uredi obavezu" : "Nova obaveza";
+  document.getElementById("taskId").value = task ? task.id : "";
+  document.getElementById("title").value = task ? task.title : "";
+  document.getElementById("date").value = task ? task.date : (dateStr || formatDate(new Date()));
+  document.getElementById("hour").value = task ? (task.hour ?? "") : (hour ?? "");
+  document.getElementById("priority").value = task ? task.priority : "medium";
+  document.getElementById("description").value = task ? task.description || "" : "";
+}
+function closeModal() { document.getElementById("modal").classList.remove("open"); }
+
+document.getElementById("addTaskBtn").onclick = () => openModal();
+document.getElementById("cancelBtn").onclick = closeModal;
+document.getElementById("prevWeek").onclick = () => { currentWeekStart.setDate(currentWeekStart.getDate() - 7); render(); };
+document.getElementById("nextWeek").onclick = () => { currentWeekStart.setDate(currentWeekStart.getDate() + 7); render(); };
+document.getElementById("prevMonth").onclick = () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderMonth(); };
+document.getElementById("nextMonth").onclick = () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderMonth(); };
+
+document.getElementById("taskForm").onsubmit = (e) => {
+  e.preventDefault();
+  const id = document.getElementById("taskId").value || crypto.randomUUID();
+  const task = {
+    id,
+    title: document.getElementById("title").value.trim(),
+    date: document.getElementById("date").value,
+    hour: document.getElementById("hour").value,
+    priority: document.getElementById("priority").value,
+    description: document.getElementById("description").value.trim(),
+    done: false
+  };
+  const existing = tasks.findIndex(t => t.id === id);
+  if (existing >= 0) {
+    tasks[existing] = task;
+  } else {
+    tasks.push(task);
+  }
+  save();
+  closeModal();
+  render();
+};
+
+function editTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (task) openModal(null, "", task);
+}
+
+document.getElementById("modal").onclick = (e) => { if (e.target.id === "modal") closeModal(); };
+
+function startCalendar() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    tasks = Array.isArray(stored) ? stored : [];
+  } catch {
+    tasks = [];
+  }
+  populateHours();
+  render();
+}
+</script>
+<script type="module">
+const OWNER_EMAIL = "tadijasaric92@gmail.com";
+
+try {
+  const { getSession } = await import("/auth.js");
+  const session = await getSession();
+  if (!session || session.user.email !== OWNER_EMAIL) {
+    location.replace("/");
+  } else {
+    startCalendar();
+    document.body.classList.add("ready");
+  }
+} catch {
+  location.replace("/");
+}
+</script>
+</body>
+</html>

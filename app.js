@@ -10,6 +10,9 @@ const APPS = [
     icon: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4.5h4.5"/><path d="M12 7.5V12l3 2"/>' },
   { id: "crm", title: "CRM", label: "Open app", href: "/kalkulator/crm",
     icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M15.5 5.3a3 3 0 0 1 0 5.4M17.5 14.8c1.7.6 2.7 2.2 3 4.7"/>' },
+  // Email kontakti: every approved hub member. Not an Admin checkbox, and not the Ponude/China gate.
+  { id: "email-kontakti", title: "Email kontakti", label: "Otvori", href: "/email-kontakti/", everyone: true,
+    icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/>' },
   // app3 = Ponude · 报价单 · Quotations. On tadexhub.com the tile stays Coming soon; the /kalkulator/ponude app is unchanged.
   QUOTES_ENABLED
     ? { id: "app3", title: "Ponude · 报价单 · Quotations", label: "Open app", href: "/kalkulator/ponude",
@@ -209,6 +212,7 @@ function renderChip() {
 
 function hasAppAccess(appId, allowed) {
   if (allowed.has(appId)) return true;
+  if (APPS.some(a => a.id === appId && a.everyone)) return true;
   // Ponude shares calculator access so the team does not need a separate Admin checkbox to open the live tile.
   if (appId === "app3" && QUOTES_ENABLED && allowed.has("calculator")) return true;
   return false;
@@ -226,7 +230,7 @@ function renderApps() {
       <span class="tile-title">Moj Kalendar</span>
       <span class="tile-label">Privatni raspored <span aria-hidden="true">→</span></span>
     </a>` : "";
-  const none = !isOwner && !visible.some(a => !a.public) ? '<p class="empty">No apps assigned yet. Contact your admin.</p>' : "";
+  const none = !isOwner && !visible.some(a => !a.public && !a.everyone) ? '<p class="empty">No apps assigned yet. Contact your admin.</p>' : "";
   grid.innerHTML = none + ownerTile + visible.map(a => `
     <a class="tile${a.placeholder ? " placeholder" : ""}" href="${a.href}"${a.placeholder ? ' data-placeholder="1"' : ""}>
       <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>

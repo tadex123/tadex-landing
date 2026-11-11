@@ -62,6 +62,11 @@ function sb() {
   return clientPromise;
 }
 
+/** Same Supabase client the hub uses for sign-in, so other hub pages share that session. */
+export function hubDb() {
+  return sb();
+}
+
 async function fetchProfile(client, userId) {
   const { data, error } = await client
     .from("profiles").select("id,email,full_name,approved,is_admin,apps,app_roles,rank,app_perms,direktor_id,created_at")

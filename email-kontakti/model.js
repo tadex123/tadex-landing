@@ -4,8 +4,8 @@
 export const NEED_ONE = "Unesite barem jedan podatak. Dovoljan je samo email, ili samo naziv firme.";
 export const EMPTY_HINT = "Dovoljan je samo email. Naziv firme, ime i ostala polja mogu ostati prazna.";
 export const SAVE_HINT = "Sva polja su opcionalna. Možete spremiti samo email, ili samo naziv firme. Podatke o poslanom emailu upišite tek kad ga budete bilježili.";
-export const SEND_NEEDS_FROM_AND_WHO = "Kad bilježite poslani email, upišite email s kojega je poslano i tko je poslao.";
-export const EMPTY_SEND = "Još nema zabilježenog poslanog emaila. Sanduče i kolega ostaju prazni dok ga ne upišete.";
+export const SEND_NEEDS_FROM = "Kad bilježite poslani email, upišite email s kojega je poslano.";
+export const EMPTY_SEND = "Još nema zabilježenog poslanog emaila. Sanduče ostaje prazno dok ga ne upišete.";
 
 export const BRANDS = {
   tadex: {
@@ -45,8 +45,7 @@ export const FIELD_DEFS = [
   { key: "owner_name", label: "Odgovorna osoba", max: 80, suggestions: ["Aida", "Magdalena", "Mladen"] },
   { key: "last_email_on", label: "Datum", type: "date", group: "send" },
   { key: "last_email_subject", label: "Naslov", max: 300, group: "send" },
-  { key: "from_address", label: "Email s kojega je poslano", max: 320, group: "send" },
-  { key: "sent_by", label: "Tko je poslao", max: 80, group: "send", suggestions: ["Tadija", "Aida", "Magdalena", "Mladen"] },
+  { key: "from_address", label: "Email s kojega je poslano", max: 320, group: "send", wide: true },
   { key: "status", label: "Status", type: "status" },
   { key: "next_follow_up", label: "Sljedeći follow-up", type: "date" },
   { key: "deal_ref", label: "Veza na posao (deal)", max: 120, hint: "Samo ako ID već postoji u hubu. Ostavite prazno ako nema." },
@@ -122,8 +121,8 @@ export function buildWrite(form, brand, country) {
     row[field.key] = text || null;
   }
   const recordedSend = row.last_email_on != null || row.last_email_subject != null;
-  if (recordedSend && (row.from_address == null || row.sent_by == null)) {
-    return { ok: false, message: SEND_NEEDS_FROM_AND_WHO };
+  if (recordedSend && row.from_address == null) {
+    return { ok: false, message: SEND_NEEDS_FROM };
   }
   if (!Object.values(row).some(value => value != null && value !== "")) {
     return { ok: false, message: NEED_ONE };
@@ -188,7 +187,6 @@ export function activitySummary(row) {
   if (row.last_email_on) lines.push({ k: "Datum", v: formatDate(row.last_email_on) });
   if (row.last_email_subject) lines.push({ k: "Naslov", v: String(row.last_email_subject) });
   if (row.from_address) lines.push({ k: "Sanduče", v: String(row.from_address) });
-  if (row.sent_by) lines.push({ k: "Tko", v: String(row.sent_by) });
   return lines;
 }
 

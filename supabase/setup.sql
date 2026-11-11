@@ -416,10 +416,10 @@ grant execute on function public.hub_direktor_set_team_kurs(uuid, text, text) to
 -- One contact belongs to one brand (tadex | strong) and one country (HR | BA).
 -- Deal / predračun values are optional text. CRM deals live on Neon, not here.
 --
--- Last sent email stores date, subject, from_address (mailbox it was sent from)
--- and sent_by (colleague, e.g. Tadija, Aida, Magdalena, Mladen).
--- Both new columns stay null until a send is recorded. A date or subject
--- requires from_address and sent_by (email_contacts_send_record).
+-- Last sent email stores date, subject, and from_address (mailbox it was sent from).
+-- sent_by stays on the table for rows that already have a value. It is not shown
+-- and not required. A date or subject requires from_address
+-- (email_contacts_send_record).
 
 create table if not exists public.email_contacts (
   id uuid primary key default gen_random_uuid(),
@@ -532,12 +532,13 @@ alter table public.email_contacts add constraint email_contacts_has_detail check
   or note is not null
 );
 
--- A recorded send (date or subject) always keeps the mailbox and the colleague.
--- Contacts with no send yet may leave both blank.
+-- A recorded send (date or subject) requires the mailbox it was sent from.
+-- sent_by is not part of this check. Contacts with no send yet may leave
+-- from_address blank.
 alter table public.email_contacts drop constraint if exists email_contacts_send_record;
 alter table public.email_contacts add constraint email_contacts_send_record check (
   (last_email_on is null and last_email_subject is null)
-  or (from_address is not null and sent_by is not null)
+  or (from_address is not null)
 );
 
 create index if not exists email_contacts_partition_idx
@@ -636,7 +637,7 @@ comment on table public.email_contacts is
 comment on column public.email_contacts.from_address is
   'Mailbox the last email was sent from. Null when no send is recorded.';
 comment on column public.email_contacts.sent_by is
-  'Colleague who sent the last email (Tadija, Aida, Magdalena, Mladen, or another name). Null when no send is recorded.';
+  'Retained for existing rows. Not shown and not required. Leave null on new writes.';
 comment on column public.email_contacts.deal_ref is
   'Optional existing deal id from the hub CRM. No foreign key; deals are not stored in this database.';
 comment on column public.email_contacts.predracun_ref is

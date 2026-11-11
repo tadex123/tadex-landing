@@ -17,7 +17,7 @@ function goLogin() {
 
 function dbMessage(error) {
   const blob = `${error && error.message || ""} ${error && error.details || ""} ${error && error.hint || ""}`;
-  if (/email_contacts_send_record/.test(blob)) return model.SEND_NEEDS_FROM_AND_WHO;
+  if (/email_contacts_send_record/.test(blob)) return model.SEND_NEEDS_FROM;
   if (/email_contacts_has_detail/.test(blob)) return model.NEED_ONE;
   if (/email_contacts_status/.test(blob)) return "Status nije prepoznat. Ostavite prazno ili odaberite jedan sa liste.";
   if (/email_contacts_lengths/.test(blob)) return "Jedno polje je predugo.";
@@ -66,7 +66,7 @@ function formFields() {
   return model.fieldGroups().map(group => {
     const inner = `<div class="grid">${group.fields.map(fieldControl).join("")}</div>`;
     if (group.group === "send") {
-      return `<fieldset class="send"><legend>Zadnji poslani email</legend><p class="hint">${esc(model.SEND_NEEDS_FROM_AND_WHO)} Ako email još nije poslan, ostavite cijeli blok prazan.</p>${inner}</fieldset>`;
+      return `<fieldset class="send"><legend>Zadnji poslani email</legend><p class="hint">${esc(model.SEND_NEEDS_FROM)} Ako email još nije poslan, ostavite cijeli blok prazan.</p>${inner}</fieldset>`;
     }
     return inner;
   }).join("");

@@ -14,7 +14,7 @@ export const BRANDS = {
   },
   strong: {
     title: "Strong Baza",
-    text: "strong.ba · Mladen. Zasebna baza.",
+    text: "Strong Industry. Mehanizacija. Zasebna baza.",
   },
 };
 

@@ -157,6 +157,8 @@ test("routes stay inside one baza and one country", () => {
     "/email-kontakti/?baza=strong&drzava=BA",
   ]);
   assert.deepEqual(brandChoices().map(item => item.title), ["Tadex Baza", "Strong Baza"]);
+  assert.equal(brandChoices().find(item => item.id === "strong").text, "Strong Industry. Mehanizacija. Zasebna baza.");
+  assert.equal(brandChoices().find(item => item.id === "tadex").text, "Uvoz iz Kine · TADEX. Zasebna baza.");
   assert.equal(brandTitle("strong").includes("Tadex"), false);
 });
 

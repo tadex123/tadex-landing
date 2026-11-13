@@ -1,5 +1,7 @@
 // TADEX Hub UI. Renders the signed-out form, the apps grid and the admin panel.
 import * as auth from "./auth.js";
+import * as i18n from "./i18n.js";
+const { t } = i18n;
 
 // Off on tadexhub.com (Coming soon) until a later China-only unlock. Other hosts keep the live tile.
 const QUOTES_ENABLED = !/(^|\.)tadexhub\.com$/.test(location.hostname);
@@ -148,19 +150,19 @@ function setStatus(text, kind = "info") {
 
 function setState(state) {
   document.body.dataset.state = state; // out | apps | admin
-  $("#sub").textContent = state === "out"
-    ? "Radni prostor tima TADEX. Prijavi se i nastavi gdje si stao."
-    : "Sve tvoje aplikacije na jednom mjestu.";
+  // Signed out: English. Signed in: the language this person chose on this device (default Bosnian).
+  i18n.setLang(state === "out" ? "en" : i18n.savedLang());
+  $("#sub").textContent = t(state === "out" ? "sub.out" : "sub.in");
 }
 
 // ---------- Signed-out form ----------
 function setMode(m) {
   mode = m;
   const req = m === "request", reset = m === "reset";
-  $("#form-title").textContent = req ? "Zatraži pristup" : reset ? "Nova lozinka" : "Prijava";
-  $("#submit-label").textContent = req ? "Pošalji zahtjev" : reset ? "Pošalji link" : "Prijavi se";
-  $("#toggle").textContent = req || reset ? "Nazad na prijavu" : "Zatraži pristup";
-  $("#toggle-lead").textContent = req ? "Već imaš pristup?" : reset ? "Sjetio si se?" : "Nemaš račun?";
+  $("#form-title").textContent = t(req ? "form.request" : reset ? "form.reset" : "form.signin");
+  $("#submit-label").textContent = t(req ? "submit.request" : reset ? "submit.reset" : "submit.signin");
+  $("#toggle").textContent = t(req || reset ? "toggle.back" : "form.request");
+  $("#toggle-lead").textContent = t(req ? "lead.request" : reset ? "lead.reset" : "lead.signin");
   $("#password").autocomplete = req ? "new-password" : "current-password";
   $("#password").minLength = req ? 8 : 0;
   $("#password").required = !reset;
@@ -181,21 +183,21 @@ async function onSubmit(e) {
   btn.disabled = true; btn.classList.add("busy");
   try {
     if (mode === "reset") {
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setStatus("Upiši e-mail koji koristiš za TADEX Hub.", "error"); $("#email").focus(); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setStatus(t("err.email"), "error"); $("#email").focus(); return; }
       await auth.requestPasswordReset(email);
-      setStatus(`Ako ${email} ima TADEX Hub račun, link za novu lozinku je na putu. Otvori ga na bilo kojem uređaju i izaberi novu lozinku.`, "ok");
+      setStatus(t("ok.reset", { email }), "ok");
     } else if (mode === "request") {
-      if (fullName.length < 2) { setStatus("Upiši ime i prezime.", "error"); $("#full-name").focus(); return; }
+      if (fullName.length < 2) { setStatus(t("err.name"), "error"); $("#full-name").focus(); return; }
       await auth.requestAccess(email, password, fullName);
       $("#form").reset();
-      setStatus("Zahtjev je poslan. Dobit ćeš pristup kad ga admin odobri.", "ok");
+      setStatus(t("ok.request"), "ok");
     } else {
       session = await auth.signIn(email, password);
       $("#form").reset();
       renderSignedIn();
     }
   } catch (err) {
-    setStatus(err.message || "Nešto nije u redu. Pokušaj ponovo.", err.code === "pending" ? "warn" : "error");
+    setStatus(err.message || t("err.generic"), err.code === "pending" ? "warn" : "error");
   } finally {
     btn.disabled = false; btn.classList.remove("busy");
   }
@@ -227,20 +229,20 @@ function renderApps() {
   const ownerTile = isOwner ? `
     <a class="tile" href="/kalendar/">
       <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
-      <span class="tile-title">Moj Kalendar</span>
-      <span class="tile-label">Privatni raspored <span aria-hidden="true">→</span></span>
+      <span class="tile-title">${esc(t("app.kalendar"))}</span>
+      <span class="tile-label">${esc(t("app.kalendar.label"))} <span aria-hidden="true">→</span></span>
     </a>` : "";
-  const none = !isOwner && !visible.some(a => !a.public && !a.everyone) ? '<p class="empty">Još nemaš dodijeljenih aplikacija. Javi se adminu.</p>' : "";
+  const none = !isOwner && !visible.some(a => !a.public && !a.everyone) ? `<p class="empty">${esc(t("apps.none"))}</p>` : "";
   const LOGI = ["posiljke", "ture", "flota"];
   const logi = visible.filter(a => LOGI.includes(a.id));
   const tiles = visible.filter(a => !LOGI.includes(a.id));
   if (logi.length) tiles.push({ id: "logistika", title: "Logistika", href: logi[0].href, icon: logi[0].icon,
-    label: logi.map(a => a.title.split(" ·")[0]).join(" · ") + (logi.every(a => a.adminDraft && !hasAppAccess(a.id, allowed)) ? " · nacrt" : "") });
+    label: logi.map(a => t("app." + a.id)).join(" · ") + (logi.every(a => a.adminDraft && !hasAppAccess(a.id, allowed)) ? " · " + t("app.draft") : "") });
   grid.innerHTML = none + ownerTile + tiles.map(a => `
     <a class="tile${a.placeholder ? " placeholder" : ""}" href="${a.href}"${a.placeholder ? ' data-placeholder="1"' : ""}>
       <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>
-      <span class="tile-title">${esc(a.title)}</span>
-      <span class="tile-label">${esc(a.label)}${a.placeholder ? "" : ' <span aria-hidden="true">→</span>'}</span>
+      <span class="tile-title">${esc(a.placeholder ? t("app.soon") : i18n.has("app." + a.id) ? t("app." + a.id) : a.title)}</span>
+      <span class="tile-label">${esc(a.placeholder ? t("app.soon.label") : a.id === "logistika" ? a.label : t("open"))}${a.placeholder ? "" : ' <span aria-hidden="true">→</span>'}</span>
     </a>`).join("");
   grid.querySelectorAll("[data-placeholder]").forEach(el => el.addEventListener("click", e => e.preventDefault()));
 }
@@ -487,7 +489,7 @@ function goNext() {
   const apps = session.profile.apps || [];
   if (!hasAppAccess(NEXT.app, new Set(apps))) {
     setStatus("");
-    toast("Još nemaš pristup toj aplikaciji. Javi se adminu.", true);
+    toast(t("err.noaccess"), true);
     return false;
   }
   location.replace(NEXT.path);
@@ -509,7 +511,7 @@ async function doSignOut(e) {
   session = null;
   if (auth.previewMode) { location.href = location.pathname; return; }
   history.replaceState(null, "", location.pathname + location.search);
-  setMode("signin"); setState("out");
+  setState("out"); setMode("signin");
 }
 
 async function init() {
@@ -517,6 +519,13 @@ async function init() {
   $("#toggle").addEventListener("click", e => { e.preventDefault(); setMode(mode === "signin" ? "request" : "signin"); $("#email").focus(); });
   $("#forgot").addEventListener("click", e => { e.preventDefault(); setMode("reset"); $("#email").focus(); });
   $("#signout").addEventListener("click", doSignOut);
+  // Language picker (signed in only): save the choice and redraw the texts that JS writes.
+  $("#lang").addEventListener("change", e => {
+    i18n.saveLang(e.target.value);
+    setState(document.body.dataset.state);
+    setMode(mode);
+    if (document.body.dataset.state === "apps") renderApps();
+  });
   window.addEventListener("hashchange", route);
   if (auth.previewMode) $("#preview-flag").hidden = false;
   // /?reset=1 (from an expired reset link on /auth/confirm) opens "Reset password" directly.
@@ -527,7 +536,7 @@ async function init() {
   try {
     session = await auth.getSession();
     redirect = auth.consumeAuthRedirect();
-    if (!session && redirect) setStatus(redirect.kind === "error" ? redirect.message : "E-mail je potvrđen. Sada se možeš prijaviti.", redirect.kind === "error" ? "error" : "ok");
+    if (!session && redirect) setStatus(redirect.kind === "error" ? redirect.message : t("ok.confirmed"), redirect.kind === "error" ? "error" : "ok");
   } catch (err) {
     session = null;
     auth.consumeAuthRedirect();

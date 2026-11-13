@@ -53,6 +53,9 @@ footer a:hover{color:var(--blue)}
 .logo{display:inline-flex;align-items:center;background:#fff;border-radius:14px;padding:7px 14px;box-shadow:0 8px 22px rgba(14,76,128,.28);transition:transform .2s}
 .logo:hover{transform:translateY(-1px)}
 .logo img{display:block;height:40px;width:auto}
+.logo{gap:8px;text-decoration:none;min-height:40px}
+.logo-word{font-size:22px;font-weight:800;letter-spacing:.5px;color:#0c163a}
+.logo-hub{font-size:13px;font-weight:700;color:#fff;background:#e92264;padding:3px 9px;border-radius:999px}
 body[data-state="out"] .in-only,body[data-state="out"] .apps-only,body[data-state="out"] .admin-only{display:none!important}
 body:not([data-state="out"]) .out-only{display:none!important}
 body[data-state="apps"] .admin-only,body[data-state="admin"] .apps-only{display:none!important}

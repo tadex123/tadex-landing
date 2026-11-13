@@ -342,3 +342,9 @@ h1 .hl{background:none;color:var(--v4-blue)}
 @media (max-width:600px){.logo-word{font-size:1.15rem}}
 .eyebrow{display:none}
 @media (max-width:860px){body[data-state="out"] .pill{display:none} body[data-state="out"] #signin{width:100%}}
+/* Language picker in the header chip (signed in) */
+.lang{font:inherit;font-size:.82rem;font-weight:700;color:#fff;background:#0c163a;border:1px solid #3a4a78;border-radius:8px;padding:4px 6px;cursor:pointer}
+.lang:focus{outline:2px solid #fff;outline-offset:1px}
+/* English: show the English thought, hide the Bosnian one */
+body[data-lang="en"] .thought-bs{display:none}
+body[data-lang="en"] .thought-en{display:block;margin-top:4px;color:var(--v4-navy);font-style:normal;font-size:1.15rem;font-weight:600;line-height:1.4}

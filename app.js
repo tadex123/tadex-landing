@@ -4,11 +4,10 @@ import * as auth from "./auth.js";
 const APPS = [
   { id: "calculator", title: "Kalkulator", label: "Open app", href: "/login/",
     icon: '<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx="1"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>' },
-  // Id "app2" was the reserved slot; it now holds Logistika so people who already had it keep access.
-  { id: "app2", title: "Logistika", label: "Pošiljke, ture, flota", href: "/kalkulator/posiljke",
-    icon: '<path d="M3 15h13V6H3z"/><path d="M16 9h3.5L22 12v3h-6"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="18" cy="17.5" r="1.8"/>' },
+  { id: "app2", title: "Coming soon", label: "Reserved for a new app", href: "#", placeholder: true,
+    icon: '<path d="M12 5v14M5 12h14"/>' },
 ];
-const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Logistika" }];
+const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "App 2" }];
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

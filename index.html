@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bs">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TADEX Hub – Welcome, team</title>
+<title>TADEX Hub · Radni prostor tima</title>
 <meta name="description" content="TADEX Hub – welcome, TADEX team. Sign in to continue.">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#1E78B8">
+<meta name="theme-color" content="#0c163a">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TADEX Hub">
 <meta property="og:title" content="TADEX Hub – Welcome, team">
@@ -24,13 +24,13 @@
 <body class="booting" data-state="out">
 <header>
  <div class="wrap bar">
-  <a class="logo" href="/" aria-label="TADEX Hub home"><img src="assets/tadex-logo.png" alt="Tadex Group" width="350" height="100"></a>
-  <a class="pill out-only" href="#signin">Team login</a>
+  <a class="logo" href="/" aria-label="TADEX Hub početna"><span class="logo-word">TADEX</span><span class="logo-hub">Hub</span></a>
+  <a class="pill out-only" href="#signin">Prijava</a>
   <div class="chip in-only">
    <span class="avatar" id="chip-initial" aria-hidden="true"></span>
    <span class="chip-email" id="chip-email"></span>
    <a href="#admin" id="admin-link" class="chip-link" hidden>Admin</a>
-   <a href="#" id="signout" class="chip-link">Sign out</a>
+   <a href="#" id="signout" class="chip-link">Odjava</a>
   </div>
  </div>
 </header>
@@ -40,9 +40,9 @@
  <div class="wrap inner">
   <div class="greet">
    <span class="eyebrow"><span class="dot"></span>Dobrodošli, tim TADEX</span>
-   <h1>Welcome back,<br><span class="hl">TADEX team</span></h1>
-   <p class="sub" id="sub">Good to see you. This is your team space. Sign in to pick up where you left off.</p>
-   <span class="preview-flag" id="preview-flag" hidden>Preview · sample data</span>
+   <h1>Dobro došli,<br><span class="hl">tim TADEX</span></h1>
+   <p class="sub" id="sub">Radni prostor tima TADEX. Prijavi se i nastavi gdje si stao.</p>
+   <span class="preview-flag" id="preview-flag" hidden>Pregled · probni podaci</span>
    <figure class="thought no-admin" id="thought" aria-label="Misao dana / Thought of the day">
     <span class="thought-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z"/></svg></span>
     <div class="thought-body">
@@ -54,7 +54,7 @@
   </div>
 
   <aside class="clocks in-only no-admin" id="clocks" aria-label="Lokalno vrijeme / Local time">
-   <span class="clocks-k">Lokalno vrijeme <span class="thought-sep" aria-hidden="true">·</span> <span class="thought-k-en">Local time</span></span>
+   <span class="clocks-k">Lokalno vrijeme</span>
    <div class="clock" data-clock="sa" data-tz="Europe/Sarajevo">
     <div class="clock-city"><span class="clock-flag" aria-hidden="true">BA</span>Sarajevo</div>
     <time class="clock-time"><span class="clock-hm">--:--</span><span class="clock-ss">--</span></time>
@@ -70,25 +70,25 @@
 
   <section class="card out-only" id="signin" aria-labelledby="form-title">
    <div class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-   <h2 id="form-title">Sign in</h2>
+   <h2 id="form-title">Prijava</h2>
    <form id="form" novalidate>
-    <label class="field request-only" id="name-field" hidden><span>Ime i prezime / Full name</span>
+    <label class="field request-only" id="name-field" hidden><span>Ime i prezime</span>
      <input id="full-name" name="full_name" type="text" autocomplete="name" placeholder="Ime Prezime" maxlength="120"></label>
-    <label class="field"><span>Email</span>
-     <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
-    <label class="field" id="password-field"><span>Password</span>
+    <label class="field"><span>E-mail</span>
+     <input id="email" name="email" type="email" autocomplete="email" placeholder="ime@tadexgroup.ba" required></label>
+    <label class="field" id="password-field"><span>Lozinka</span>
      <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required></label>
-    <p class="forgot" id="forgot-row"><a href="#" id="forgot">Forgot password?</a></p>
-    <p class="reset-hint" id="reset-hint" hidden>Enter your email and we'll send you a link to choose a new password.</p>
-    <button class="btn" id="submit" type="submit"><span id="submit-label">Sign in</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    <p class="forgot" id="forgot-row"><a href="#" id="forgot">Zaboravljena lozinka?</a></p>
+    <p class="reset-hint" id="reset-hint" hidden>Upiši e-mail i poslat ćemo ti link za novu lozinku.</p>
+    <button class="btn" id="submit" type="submit"><span id="submit-label">Prijavi se</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
     <p class="status" id="status" role="status" aria-live="polite"></p>
    </form>
-   <p class="switch"><span id="toggle-lead">No account yet?</span> <a href="#" id="toggle">Request access</a></p>
-   <p class="note">New accounts need approval from the admin before access is granted.</p>
+   <p class="switch"><span id="toggle-lead">Nemaš račun?</span> <a href="#" id="toggle">Zatraži pristup</a></p>
+   <p class="note">Admin mora odobriti novi račun.</p>
   </section>
 
   <section class="panel apps-only" aria-labelledby="apps-title">
-   <h2 id="apps-title">Your apps</h2>
+   <h2 id="apps-title">Aplikacije</h2>
    <div class="apps" id="apps-grid"></div>
   </section>
 
@@ -99,12 +99,12 @@
   </section>
 
   <section class="panel admin-only" aria-labelledby="admin-title">
-   <div class="panel-head"><h2 id="admin-title">Admin</h2><a href="#" class="back" onclick="location.hash='';return false">← Your apps</a></div>
+   <div class="panel-head"><h2 id="admin-title">Admin</h2><a href="#" class="back" onclick="location.hash='';return false">← Aplikacije</a></div>
    <div id="admin-body"></div>
   </section>
  </div>
  <section class="route no-admin" aria-label="Put robe: Yiwu i Guangzhou → Bosna i Hercegovina / Goods route: Yiwu and Guangzhou → Bosnia and Herzegovina">
-  <div class="wrap route-head"><span class="route-k">Put robe · Goods route</span><span class="route-legend"><span class="lg lg-main">morem preko Sueca · by sea via Suez</span><span class="lg lg-alt">oko Rta dobre nade · via Cape of Good Hope</span></span><span class="route-path">义乌 Yiwu · 广州 Guangzhou <span aria-hidden="true">→</span> Ploče · Rijeka · Koper <span aria-hidden="true">→</span> BiH</span></div>
+  <div class="wrap route-head"><span class="route-k">Put robe</span><span class="route-legend"><span class="lg lg-main">morem preko Sueca</span><span class="lg lg-alt">oko Rta dobre nade</span></span><span class="route-path">义乌 Yiwu · 广州 Guangzhou <span aria-hidden="true">→</span> Ploče · Rijeka · Koper <span aria-hidden="true">→</span> BiH</span></div>
   <div class="route-band">
    <canvas id="route-canvas" class="route-canvas" role="img" aria-label="Animated map: cargo ships sail from Ningbo (Yiwu) and Nansha (Guangzhou) through the South China Sea, the Strait of Malacca, the Indian Ocean, the Red Sea, the Suez Canal and the Mediterranean to Ploče, Rijeka or Koper on the Adriatic, or alternatively around the Cape of Good Hope and through Gibraltar; then by land to Sarajevo, Mostar, Banja Luka, Tuzla, Zenica and Bihać"></canvas>
   </div>
@@ -114,7 +114,7 @@
 <footer>
  <div class="wrap foot">
   <span>© 2026 TADEX Group · tadexhub.com</span>
-  <a href="#signin" class="out-only">Team login →</a>
+  <a href="#signin" class="out-only">Prijava →</a>
  </div>
 </footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

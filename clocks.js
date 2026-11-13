@@ -34,13 +34,11 @@ function tick() {
     el.querySelector(".clock-hm").textContent = hm;
     el.querySelector(".clock-ss").textContent = ss;
     el.querySelector("time").dateTime = now.toISOString();
-    const local = z.dateLocale === "bs" ? bsDate(z.tz, now) : fmt("zh-CN", { timeZone: z.tz, month: "long", day: "numeric", weekday: "long" }).format(now);
-    const en = fmt("en-GB", { timeZone: z.tz, weekday: "short", day: "numeric", month: "short" }).format(now);
-    el.querySelector(".clock-date").textContent = `${local} · ${en}`;
+    el.querySelector(".clock-date").textContent = bsDate(z.tz, now);
   }
   const diffH = (offsetMinutes("Asia/Shanghai", now) - offsetMinutes("Europe/Sarajevo", now)) / 60;
   const d = root.querySelector(".clocks-diff");
-  if (d) { const n = String(diffH).replace(".", ","); d.textContent = `Šangaj je ${n} h ispred · Shanghai is ${String(diffH)} h ahead`; d.dataset.hours = String(diffH); }
+  if (d) { const n = String(diffH).replace(".", ","); d.textContent = `Šangaj je ${n} h ispred`; d.dataset.hours = String(diffH); }
 }
 
 export function mountClocks() {

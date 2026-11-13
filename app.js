@@ -4,20 +4,20 @@ import * as auth from "./auth.js";
 // Off on tadexhub.com (Coming soon) until a later China-only unlock. Other hosts keep the live tile.
 const QUOTES_ENABLED = !/(^|\.)tadexhub\.com$/.test(location.hostname);
 const APPS = [
-  { id: "calculator", title: "Kalkulator", label: "Open app", href: "/kalkulator/",
+  { id: "calculator", title: "Kalkulator", label: "Otvori", href: "/kalkulator/",
     icon: '<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx="1"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>' },
-  { id: "app2", title: "Povijest kalkulacija", label: "Open app", href: "/kalkulator/historija",
+  { id: "app2", title: "Povijest kalkulacija", label: "Otvori", href: "/kalkulator/historija",
     icon: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4.5h4.5"/><path d="M12 7.5V12l3 2"/>' },
-  { id: "crm", title: "CRM", label: "Open app", href: "/kalkulator/crm",
+  { id: "crm", title: "CRM", label: "Otvori", href: "/kalkulator/crm",
     icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M15.5 5.3a3 3 0 0 1 0 5.4M17.5 14.8c1.7.6 2.7 2.2 3 4.7"/>' },
   // Email kontakti: every approved hub member. Not an Admin checkbox, and not the Ponude/China gate.
   { id: "email-kontakti", title: "Email kontakti", label: "Otvori", href: "/email-kontakti/", everyone: true,
     icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/>' },
   // app3 = Ponude · 报价单 · Quotations. On tadexhub.com the tile stays Coming soon; the /kalkulator/ponude app is unchanged.
   QUOTES_ENABLED
-    ? { id: "app3", title: "Ponude · 报价单 · Quotations", label: "Open app", href: "/kalkulator/ponude",
+    ? { id: "app3", title: "Ponude · 报价单 · Quotations", label: "Otvori", href: "/kalkulator/ponude",
         icon: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15.5h5M10 8.5h2"/>' }
-    : { id: "app3", title: "Coming soon", label: "Reserved for a new app", href: "#", placeholder: true, public: true,
+    : { id: "app3", title: "Uskoro", label: "Mjesto za novu aplikaciju", href: "#", placeholder: true, public: true,
         icon: '<path d="M12 5v14M5 12h14"/>' },
   // Unfinished transport suite (Grok Build frame). Admin always sees these; others only after Admin enables.
   { id: "posiljke", title: "Pošiljke", label: "Nacrt · Admin", href: "/kalkulator/posiljke", adminDraft: true,
@@ -149,18 +149,18 @@ function setStatus(text, kind = "info") {
 function setState(state) {
   document.body.dataset.state = state; // out | apps | admin
   $("#sub").textContent = state === "out"
-    ? "Good to see you. This is your team space. Sign in to pick up where you left off."
-    : "Good to see you. Here's everything you have access to.";
+    ? "Radni prostor tima TADEX. Prijavi se i nastavi gdje si stao."
+    : "Sve tvoje aplikacije na jednom mjestu.";
 }
 
 // ---------- Signed-out form ----------
 function setMode(m) {
   mode = m;
   const req = m === "request", reset = m === "reset";
-  $("#form-title").textContent = req ? "Request access" : reset ? "Reset password" : "Sign in";
-  $("#submit-label").textContent = req ? "Send request" : reset ? "Send reset link" : "Sign in";
-  $("#toggle").textContent = req || reset ? "Back to sign in" : "Request access";
-  $("#toggle-lead").textContent = req ? "Already approved?" : reset ? "Remembered it?" : "No account yet?";
+  $("#form-title").textContent = req ? "Zatraži pristup" : reset ? "Nova lozinka" : "Prijava";
+  $("#submit-label").textContent = req ? "Pošalji zahtjev" : reset ? "Pošalji link" : "Prijavi se";
+  $("#toggle").textContent = req || reset ? "Nazad na prijavu" : "Zatraži pristup";
+  $("#toggle-lead").textContent = req ? "Već imaš pristup?" : reset ? "Sjetio si se?" : "Nemaš račun?";
   $("#password").autocomplete = req ? "new-password" : "current-password";
   $("#password").minLength = req ? 8 : 0;
   $("#password").required = !reset;
@@ -181,21 +181,21 @@ async function onSubmit(e) {
   btn.disabled = true; btn.classList.add("busy");
   try {
     if (mode === "reset") {
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setStatus("Please enter the email you use for TADEX Hub.", "error"); $("#email").focus(); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setStatus("Upiši e-mail koji koristiš za TADEX Hub.", "error"); $("#email").focus(); return; }
       await auth.requestPasswordReset(email);
-      setStatus(`If ${email} has a TADEX Hub account, a reset link is on its way. Open it on this or any device — it takes you to tadexhub.com to choose a new password.`, "ok");
+      setStatus(`Ako ${email} ima TADEX Hub račun, link za novu lozinku je na putu. Otvori ga na bilo kojem uređaju i izaberi novu lozinku.`, "ok");
     } else if (mode === "request") {
-      if (fullName.length < 2) { setStatus("Please enter your full name (Ime i prezime).", "error"); $("#full-name").focus(); return; }
+      if (fullName.length < 2) { setStatus("Upiši ime i prezime.", "error"); $("#full-name").focus(); return; }
       await auth.requestAccess(email, password, fullName);
       $("#form").reset();
-      setStatus("Your request was sent. You'll get access once the admin approves it.", "ok");
+      setStatus("Zahtjev je poslan. Dobit ćeš pristup kad ga admin odobri.", "ok");
     } else {
       session = await auth.signIn(email, password);
       $("#form").reset();
       renderSignedIn();
     }
   } catch (err) {
-    setStatus(err.message || "Something went wrong. Please try again.", err.code === "pending" ? "warn" : "error");
+    setStatus(err.message || "Nešto nije u redu. Pokušaj ponovo.", err.code === "pending" ? "warn" : "error");
   } finally {
     btn.disabled = false; btn.classList.remove("busy");
   }
@@ -230,8 +230,13 @@ function renderApps() {
       <span class="tile-title">Moj Kalendar</span>
       <span class="tile-label">Privatni raspored <span aria-hidden="true">→</span></span>
     </a>` : "";
-  const none = !isOwner && !visible.some(a => !a.public && !a.everyone) ? '<p class="empty">No apps assigned yet. Contact your admin.</p>' : "";
-  grid.innerHTML = none + ownerTile + visible.map(a => `
+  const none = !isOwner && !visible.some(a => !a.public && !a.everyone) ? '<p class="empty">Još nemaš dodijeljenih aplikacija. Javi se adminu.</p>' : "";
+  const LOGI = ["posiljke", "ture", "flota"];
+  const logi = visible.filter(a => LOGI.includes(a.id));
+  const tiles = visible.filter(a => !LOGI.includes(a.id));
+  if (logi.length) tiles.push({ id: "logistika", title: "Logistika", href: logi[0].href, icon: logi[0].icon,
+    label: logi.map(a => a.title.split(" ·")[0]).join(" · ") + (logi.every(a => a.adminDraft && !hasAppAccess(a.id, allowed)) ? " · nacrt" : "") });
+  grid.innerHTML = none + ownerTile + tiles.map(a => `
     <a class="tile${a.placeholder ? " placeholder" : ""}" href="${a.href}"${a.placeholder ? ' data-placeholder="1"' : ""}>
       <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>
       <span class="tile-title">${esc(a.title)}</span>
@@ -482,7 +487,7 @@ function goNext() {
   const apps = session.profile.apps || [];
   if (!hasAppAccess(NEXT.app, new Set(apps))) {
     setStatus("");
-    toast("You don't have access to that app yet. Ask your admin.", true);
+    toast("Još nemaš pristup toj aplikaciji. Javi se adminu.", true);
     return false;
   }
   location.replace(NEXT.path);
@@ -522,7 +527,7 @@ async function init() {
   try {
     session = await auth.getSession();
     redirect = auth.consumeAuthRedirect();
-    if (!session && redirect) setStatus(redirect.kind === "error" ? redirect.message : "Your email is confirmed. You can sign in now.", redirect.kind === "error" ? "error" : "ok");
+    if (!session && redirect) setStatus(redirect.kind === "error" ? redirect.message : "E-mail je potvrđen. Sada se možeš prijaviti.", redirect.kind === "error" ? "error" : "ok");
   } catch (err) {
     session = null;
     auth.consumeAuthRedirect();

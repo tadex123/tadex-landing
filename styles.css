@@ -268,3 +268,77 @@ body:not([data-state="out"]) .inner>section{grid-column:1/-1}
 .team-kurs-table th{font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700}
 .team-kurs-table select.app-role{min-width:7.5rem}
 .team-kurs-empty{margin:0;color:var(--muted)}
+
+/* ---------- v4 redesign (approved 13.11.2026): navy header, light page, white cards, one language ----------
+   Colors from the TadexChina logo: navy #0c163a, pink #e92264; app blue #1a4b86. Self-hosted Inter stays
+   (Google Fonts are blocked in China). Remove this block to return to the previous look. */
+:root{--v4-navy:#0c163a;--v4-blue:#1a4b86;--v4-pink:#e92264;--v4-paper:#eef5fb;--v4-line:#d3e1f0;--v4-muted:#4e5d78;--v4-soft:#e6f1fb}
+header{position:static;background:var(--v4-navy)}
+.bar{height:64px}
+.logo{background:none;box-shadow:none;padding:0;gap:9px;text-decoration:none}
+.logo:hover{transform:none}
+.logo-word{font-size:1.35rem;font-weight:800;letter-spacing:.03em;color:#fff}
+.logo-hub{font-size:.8rem;font-weight:700;color:#fff;background:var(--v4-pink);padding:3px 9px;border-radius:999px}
+.pill{background:#fff;color:var(--v4-navy);box-shadow:none}
+.pill:hover{box-shadow:none;background:var(--v4-soft)}
+.chip{background:#1c2a55;color:#fff;box-shadow:none}
+.chip-email{color:#fff}
+.chip-link{color:#c9d6ea}
+.chip-link:hover{color:#fff}
+.avatar{background:var(--v4-blue)}
+.hero{background:var(--v4-paper);animation:none;color:var(--v4-navy);padding:48px 0 64px}
+body:not([data-state="out"]) .hero{padding:40px 0 56px}
+.blob,.grid-bg{display:none}
+.eyebrow{background:#fff;border:1px solid var(--v4-line);color:var(--v4-navy);backdrop-filter:none}
+.dot{background:var(--v4-pink);animation:none;box-shadow:none}
+h1{font-weight:800;letter-spacing:-.02em;font-size:clamp(2rem,4.6vw,3.2rem)}
+body:not([data-state="out"]) h1{font-size:clamp(1.9rem,4vw,2.6rem)}
+h1 .hl{background:none;color:var(--v4-blue)}
+.sub{color:var(--v4-muted)}
+.preview-flag{background:#fff;border-color:var(--v4-line);color:var(--v4-navy)}
+.card,.panel{background:#fff;border:1px solid var(--v4-line);border-radius:16px;box-shadow:0 1px 0 rgba(12,22,58,.04),0 14px 32px rgba(26,75,134,.08)}
+.card:hover{transform:none}
+.lock{background:var(--v4-soft);box-shadow:none;width:48px;height:48px;border-radius:12px}
+.lock svg{stroke:var(--v4-blue)}
+.btn{background:var(--v4-blue);box-shadow:none;border-radius:10px}
+.btn:hover{background:var(--v4-navy);transform:none;box-shadow:none}
+.field input{background:#fff;border:1px solid #b9cde4;border-radius:10px}
+.field input:focus{border-color:var(--v4-blue);box-shadow:0 0 0 3px rgba(26,75,134,.15)}
+.switch a,.forgot a,.back{color:var(--v4-blue)}
+.tile{background:#fff;border:1px solid var(--v4-line);border-radius:14px}
+.tile:hover{transform:translateY(-2px);border-color:var(--v4-blue);box-shadow:0 12px 26px rgba(26,75,134,.12)}
+.tile-ic{background:var(--v4-soft);box-shadow:none;width:48px;height:48px;border-radius:12px}
+.tile-ic svg{stroke:var(--v4-blue)}
+.tile:not(.placeholder) .tile-label{color:var(--v4-blue)}
+.tile.placeholder{border:2px dashed #b9cde4}
+/* Thought of the day: a small quiet card, Bosnian only */
+.thought{background:#fff;border:1px solid var(--v4-line);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;border-radius:14px;padding:16px 18px;gap:14px;max-width:560px}
+.thought::before,.thought::after{display:none}
+.thought-ic{width:40px;height:40px;border-radius:10px;background:var(--v4-soft);box-shadow:none}
+.thought-ic svg{width:22px;height:22px;stroke:var(--v4-blue);fill:none}
+.thought-k{background:none;border:0;padding:0;color:var(--v4-muted);letter-spacing:.1em}
+.thought-k-en,.thought-sep,.thought-en{display:none}
+.thought-bs{color:var(--v4-navy);text-shadow:none;font-size:1.15rem;font-weight:600;margin-top:4px}
+/* Clocks: white card */
+.clocks{background:#fff;border:1px solid var(--v4-line);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;color:var(--v4-navy);border-radius:16px}
+.clocks-k{background:none;border:0;padding:0;color:var(--v4-muted)}
+.clock{background:var(--v4-paper);border:1px solid var(--v4-line)}
+.clock-hm{text-shadow:none}
+.clock-zh,.clock-ss,.clock-date,.clocks-diff{color:var(--v4-muted)}
+.clock-flag{background:var(--v4-navy);color:#fff}
+/* Goods route: the map keeps its dark band so its light lines stay readable */
+.route-head,.route-k,.route-legend{color:var(--v4-navy)}
+.lg::before{border-top-color:var(--v4-navy)}
+.lg-alt::before{border-top-color:var(--v4-muted)}
+.route-path{background:#fff;border-color:var(--v4-line)}
+.route-band{background:var(--v4-navy);border:0}
+/* Phone, signed out: the form comes first */
+@media (max-width:860px){
+ body[data-state="out"] .inner{display:flex;flex-direction:column;gap:24px}
+ body[data-state="out"] #signin{order:-1}
+ body[data-state="out"] .greet h1{font-size:1.6rem}
+ .hero{padding:24px 0 48px}
+}
+@media (max-width:600px){.logo-word{font-size:1.15rem}}
+.eyebrow{display:none}
+@media (max-width:860px){body[data-state="out"] .pill{display:none} body[data-state="out"] #signin{width:100%}}

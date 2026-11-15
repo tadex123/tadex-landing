@@ -111,6 +111,15 @@
    <div id="team-kurs-body"></div>
   </section>
 
+  <section class="fb-card apps-only" id="fb-card" aria-labelledby="fb-title">
+   <span class="fb-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H8l-4 4z"/><path d="M8 10h8M8 13h5"/></svg></span>
+   <div class="fb-text">
+    <h2 id="fb-title" data-i18n="fb.title">Have a tip, suggestion or question?</h2>
+    <p data-i18n="fb.text">Write to us — every idea helps make TADEX Hub better.</p>
+   </div>
+   <button type="button" class="fb-open" id="fb-open" data-i18n="fb.open">Write to us</button>
+  </section>
+
   <section class="panel admin-only" aria-labelledby="admin-title">
    <div class="panel-head"><h2 id="admin-title">Admin</h2><a href="#" class="back" onclick="location.hash='';return false" data-i18n="apps.back">← Apps</a></div>
    <div id="admin-body"></div>
@@ -127,9 +136,30 @@
 <footer>
  <div class="wrap foot">
   <span>© 2026 TADEX Group · tadexhub.com</span>
+  <span class="foot-mail"><span data-i18n="foot.mail">Tips, suggestions, questions:</span> <a href="mailto:hello@tadexhub.com">hello@tadexhub.com</a></span>
   <a href="#signin" class="out-only" data-i18n="foot.login">Sign in →</a>
  </div>
 </footer>
+<dialog class="fb-modal" id="fb-modal" aria-labelledby="fb-modal-title">
+ <form method="dialog" class="fb-form" id="fb-form">
+  <div class="fb-head"><h2 id="fb-modal-title" data-i18n="fb.modal">Write to us</h2><button type="button" class="fb-x" id="fb-close" aria-label="Zatvori">×</button></div>
+  <p class="fb-to"><span data-i18n="fb.to">To:</span> <b>hello@tadexhub.com</b></p>
+  <fieldset class="fb-kinds">
+   <legend data-i18n="fb.kind">What is it?</legend>
+   <label><input type="radio" name="fb-kind" value="prijedlog" checked> <span data-i18n="fb.k.prijedlog">Suggestion</span></label>
+   <label><input type="radio" name="fb-kind" value="savjet"> <span data-i18n="fb.k.savjet">Tip</span></label>
+   <label><input type="radio" name="fb-kind" value="pitanje"> <span data-i18n="fb.k.pitanje">Question</span></label>
+   <label><input type="radio" name="fb-kind" value="problem"> <span data-i18n="fb.k.problem">Problem</span></label>
+  </fieldset>
+  <label class="fb-label"><span data-i18n="fb.msg">Your message</span>
+   <textarea id="fb-msg" rows="6" maxlength="3000" data-i18n-ph="fb.ph" placeholder="Write here…"></textarea></label>
+  <p class="fb-hint" data-i18n="fb.hint">“Open in email” opens a new email with everything filled in — just press Send.</p>
+  <div class="fb-actions">
+   <button type="button" class="fb-copy" id="fb-copy" data-i18n="fb.copy">Copy address</button>
+   <a class="fb-send" id="fb-send" href="mailto:hello@tadexhub.com" target="_blank" rel="noopener" data-i18n="fb.send">Open in email</a>
+  </div>
+ </form>
+</dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

@@ -483,6 +483,39 @@ function route() {
   else { setState("apps"); renderApps(); renderTeamKurs(); renderVodicNotice(); }
 }
 
+/** "Write to us": a small window that composes an email to hello@tadexhub.com. */
+const FEEDBACK_EMAIL = "hello@tadexhub.com";
+const FB_SUBJECT = { prijedlog: "Prijedlog", savjet: "Savjet", pitanje: "Pitanje", problem: "Problem" };
+function feedbackMailto() {
+  const kind = document.querySelector('input[name="fb-kind"]:checked')?.value || "prijedlog";
+  const msg = ($("#fb-msg")?.value || "").trim();
+  const who = session ? (session.profile.full_name || session.user.email) : "";
+  const email = session ? session.user.email : "";
+  const subject = `TADEX Hub – ${FB_SUBJECT[kind] || "Prijedlog"}`;
+  const body = `${msg || ""}\n\n—\n${who}${email && email !== who ? ` (${email})` : ""}\nTADEX Hub · ${new Date().toLocaleDateString("bs-BA")}`;
+  return `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+function setupFeedback() {
+  const modal = $("#fb-modal");
+  if (!modal) return;
+  const send = $("#fb-send");
+  const refresh = () => { send.href = feedbackMailto(); };
+  $("#fb-open").addEventListener("click", () => {
+    refresh();
+    if (typeof modal.showModal === "function") modal.showModal(); else modal.setAttribute("open", "");
+    setTimeout(() => $("#fb-msg")?.focus(), 50);
+  });
+  $("#fb-close").addEventListener("click", () => modal.close());
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.close(); });
+  $("#fb-msg").addEventListener("input", refresh);
+  for (const r of document.querySelectorAll('input[name="fb-kind"]')) r.addEventListener("change", refresh);
+  send.addEventListener("click", () => { refresh(); setTimeout(() => modal.close(), 300); });
+  $("#fb-copy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(FEEDBACK_EMAIL); toast(t("fb.copied")); }
+    catch { toast(FEEDBACK_EMAIL); }
+  });
+}
+
 /** First visits after the video guide went live: a card at the top until watched or dismissed (per person, per device). */
 const vodicKey = () => "hub-vodic-seen:" + (session ? session.user.id : "");
 function vodicSeen() {
@@ -531,6 +564,7 @@ async function init() {
   $("#form").addEventListener("submit", onSubmit);
   $("#toggle").addEventListener("click", e => { e.preventDefault(); setMode(mode === "signin" ? "request" : "signin"); $("#email").focus(); });
   $("#vodic-watch").addEventListener("click", () => markVodicSeen());
+  setupFeedback();
   $("#vodic-dismiss").addEventListener("click", () => { markVodicSeen(); renderVodicNotice(); });
   $("#forgot").addEventListener("click", e => { e.preventDefault(); setMode("reset"); $("#email").focus(); });
   $("#signout").addEventListener("click", doSignOut);

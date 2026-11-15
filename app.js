@@ -24,19 +24,16 @@ const APPS = [
         icon: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15.5h5M10 8.5h2"/>' }
     : { id: "app3", title: "Uskoro", label: "Mjesto za novu aplikaciju", href: "#", placeholder: true, public: true,
         icon: '<path d="M12 5v14M5 12h14"/>' },
-  // Unfinished transport suite (Grok Build frame). Admin always sees these; others only after Admin enables.
-  { id: "posiljke", title: "Pošiljke", label: "Nacrt · Admin", href: "/kalkulator/posiljke", adminDraft: true,
+  // Logistics (Pošiljke / Ture / Flota): open to every signed-in team member, one "Logistika" tile.
+  { id: "posiljke", title: "Pošiljke", label: "Otvori", href: "/kalkulator/posiljke", everyone: true,
     icon: '<path d="M3 7h18v10H3z"/><path d="M3 11h18"/><path d="M7 7V5h4v2"/>' },
-  { id: "ture", title: "Ture", label: "Nacrt · Admin", href: "/kalkulator/ture", adminDraft: true,
+  { id: "ture", title: "Ture", label: "Otvori", href: "/kalkulator/ture", everyone: true,
     icon: '<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M3 13V8h9l4 5h3v5h-2"/><path d="M3 13h10"/>' },
-  { id: "flota", title: "Flota · Vozni park", label: "Nacrt · Admin", href: "/kalkulator/flota", adminDraft: true,
+  { id: "flota", title: "Flota · Vozni park", label: "Otvori", href: "/kalkulator/flota", everyone: true,
     icon: '<rect x="3" y="10" width="18" height="7" rx="1.5"/><path d="M6 10V7h7l3 3"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/>' },
 ];
 const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }, { id: "crm", label: "CRM", noPerms: true },
-  ...(QUOTES_ENABLED ? [{ id: "app3", label: "Ponude · Quotations", noPerms: true }] : []),
-  { id: "posiljke", label: "Pošiljke (nacrt)", noPerms: true },
-  { id: "ture", label: "Ture (nacrt)", noPerms: true },
-  { id: "flota", label: "Flota (nacrt)", noPerms: true }];
+  ...(QUOTES_ENABLED ? [{ id: "app3", label: "Ponude · Quotations", noPerms: true }] : [])];
 // One role model for every hub app: Admin / Direktor / Operator (Operator default). Enforced server-side by each app.
 // Calculator: Admin = full + company settings + Operator policy + export; Direktor = full view, edits articles and
 //   per-line duty, sees the team (read-only); Operator = company Operator defaults + per-person overrides.
@@ -483,7 +480,20 @@ function toast(text, bad) {
 function route() {
   if (!session) return setState("out");
   if (location.hash === "#admin" && session.profile.is_admin) { setState("admin"); renderAdmin(); }
-  else { setState("apps"); renderApps(); renderTeamKurs(); }
+  else { setState("apps"); renderApps(); renderTeamKurs(); renderVodicNotice(); }
+}
+
+/** First visits after the video guide went live: a card at the top until watched or dismissed (per person, per device). */
+const vodicKey = () => "hub-vodic-seen:" + (session ? session.user.id : "");
+function vodicSeen() {
+  try { return localStorage.getItem(vodicKey()) === "1"; } catch { return false; }
+}
+function markVodicSeen() {
+  try { localStorage.setItem(vodicKey(), "1"); } catch { /* private mode */ }
+}
+function renderVodicNotice() {
+  const box = $("#vodic-notice");
+  if (box) box.hidden = vodicSeen();
 }
 
 /** After sign-in: return to the app that sent the person here (if they have it). */
@@ -520,6 +530,8 @@ async function doSignOut(e) {
 async function init() {
   $("#form").addEventListener("submit", onSubmit);
   $("#toggle").addEventListener("click", e => { e.preventDefault(); setMode(mode === "signin" ? "request" : "signin"); $("#email").focus(); });
+  $("#vodic-watch").addEventListener("click", () => markVodicSeen());
+  $("#vodic-dismiss").addEventListener("click", () => { markVodicSeen(); renderVodicNotice(); });
   $("#forgot").addEventListener("click", e => { e.preventDefault(); setMode("reset"); $("#email").focus(); });
   $("#signout").addEventListener("click", doSignOut);
   // Language picker (signed in only): save the choice and redraw the texts that JS writes.

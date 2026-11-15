@@ -363,7 +363,7 @@ body[data-lang="en"] .thought-en{display:block;margin-top:4px;color:var(--v4-nav
 .vn-watch:hover{background:#d01a57}
 .vn-dismiss{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:10px;padding:10px 14px;font:inherit;font-size:14px;cursor:pointer}
 
-/* "Write to us" (hello@tadexhub.com) */
+/* "Write to us" (tadija@tadexchina.com) */
 .fb-card{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:#fff;border:1px solid #d9e4f0;border-radius:18px;padding:18px 22px;margin-top:22px;color:#0c163a}
 .fb-ic{flex:none;width:46px;height:46px;border-radius:14px;background:#eef5fb;display:grid;place-items:center}
 .fb-ic svg{width:24px;height:24px;fill:none;stroke:#1a4b86;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}

@@ -73,7 +73,7 @@ const D = {
   "fb.ph": ["Write here…", "Piši ovdje…", "Piši ovdje…", "Piši ovde…"],
   "fb.hint": ["“Open in email” opens a new email with everything filled in — just press Send.", "„Otvori u emailu” otvara novi email sa svime upisanim — samo klikni Pošalji.", "„Otvori u e-mailu” otvara novi e-mail sa svime upisanim — samo klikni Pošalji.", "„Otvori u imejlu” otvara novi imejl sa svime upisanim — samo klikni Pošalji."],
   "fb.copy": ["Copy address", "Kopiraj adresu", "Kopiraj adresu", "Kopiraj adresu"],
-  "fb.copied": ["Address copied: hello@tadexhub.com", "Adresa kopirana: hello@tadexhub.com", "Adresa kopirana: hello@tadexhub.com", "Adresa kopirana: hello@tadexhub.com"],
+  "fb.copied": ["Address copied: tadija@tadexchina.com", "Adresa kopirana: tadija@tadexchina.com", "Adresa kopirana: tadija@tadexchina.com", "Adresa kopirana: tadija@tadexchina.com"],
   "fb.send": ["Open in email", "Otvori u emailu", "Otvori u e-mailu", "Otvori u imejlu"],
   "foot.mail": ["Tips, suggestions, questions:", "Savjeti, prijedlozi, pitanja:", "Savjeti, prijedlozi, pitanja:", "Saveti, predlozi, pitanja:"],
   "vodic.kicker": ["New", "Novo", "Novo", "Novo"],

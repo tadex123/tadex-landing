@@ -483,8 +483,8 @@ function route() {
   else { setState("apps"); renderApps(); renderTeamKurs(); renderVodicNotice(); }
 }
 
-/** "Write to us": a small window that composes an email to hello@tadexhub.com. */
-const FEEDBACK_EMAIL = "hello@tadexhub.com";
+/** "Write to us": a small window that composes an email to tadija@tadexchina.com. */
+const FEEDBACK_EMAIL = "tadija@tadexchina.com";
 const FB_SUBJECT = { prijedlog: "Prijedlog", savjet: "Savjet", pitanje: "Pitanje", problem: "Problem" };
 function feedbackMailto() {
   const kind = document.querySelector('input[name="fb-kind"]:checked')?.value || "prijedlog";

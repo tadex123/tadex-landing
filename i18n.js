@@ -59,6 +59,23 @@ const D = {
   "app.app2": ["Calculation history", "Povijest kalkulacija", "Povijest kalkulacija", "Istorija kalkulacija"],
   "app.crm": ["CRM", "CRM", "CRM", "CRM"],
   "app.email-kontakti": ["Email contacts", "Email kontakti", "Email kontakti", "Email kontakti"],
+  "fb.title": ["Have a tip, suggestion or question?", "Imaš savjet, prijedlog ili pitanje?", "Imaš savjet, prijedlog ili pitanje?", "Imaš savet, predlog ili pitanje?"],
+  "fb.text": ["Write to us — every idea helps make TADEX Hub better.", "Piši nam — svaka ideja pomaže da TADEX Hub bude bolji.", "Piši nam — svaka ideja pomaže da TADEX Hub bude bolji.", "Piši nam — svaka ideja pomaže da TADEX Hub bude bolji."],
+  "fb.open": ["Write to us", "Napiši nam", "Napiši nam", "Napiši nam"],
+  "fb.modal": ["Write to us", "Napiši nam", "Napiši nam", "Napiši nam"],
+  "fb.to": ["To:", "Prima:", "Prima:", "Prima:"],
+  "fb.kind": ["What is it?", "O čemu se radi?", "O čemu se radi?", "O čemu se radi?"],
+  "fb.k.prijedlog": ["Suggestion", "Prijedlog", "Prijedlog", "Predlog"],
+  "fb.k.savjet": ["Tip", "Savjet", "Savjet", "Savet"],
+  "fb.k.pitanje": ["Question", "Pitanje", "Pitanje", "Pitanje"],
+  "fb.k.problem": ["Problem", "Problem", "Problem", "Problem"],
+  "fb.msg": ["Your message", "Tvoja poruka", "Tvoja poruka", "Tvoja poruka"],
+  "fb.ph": ["Write here…", "Piši ovdje…", "Piši ovdje…", "Piši ovde…"],
+  "fb.hint": ["“Open in email” opens a new email with everything filled in — just press Send.", "„Otvori u emailu” otvara novi email sa svime upisanim — samo klikni Pošalji.", "„Otvori u e-mailu” otvara novi e-mail sa svime upisanim — samo klikni Pošalji.", "„Otvori u imejlu” otvara novi imejl sa svime upisanim — samo klikni Pošalji."],
+  "fb.copy": ["Copy address", "Kopiraj adresu", "Kopiraj adresu", "Kopiraj adresu"],
+  "fb.copied": ["Address copied: hello@tadexhub.com", "Adresa kopirana: hello@tadexhub.com", "Adresa kopirana: hello@tadexhub.com", "Adresa kopirana: hello@tadexhub.com"],
+  "fb.send": ["Open in email", "Otvori u emailu", "Otvori u e-mailu", "Otvori u imejlu"],
+  "foot.mail": ["Tips, suggestions, questions:", "Savjeti, prijedlozi, pitanja:", "Savjeti, prijedlozi, pitanja:", "Saveti, predlozi, pitanja:"],
   "vodic.kicker": ["New", "Novo", "Novo", "Novo"],
   "vodic.title": ["Video guide to TADEX Hub", "Video vodič kroz TADEX Hub", "Video vodič kroz TADEX Hub", "Video vodič kroz TADEX Hub"],
   "vodic.text": ["7.5 minutes, from sign-in to delivery. Turn the sound on.", "7,5 minuta, od prijave do isporuke. Uključi zvuk.", "7,5 minuta, od prijave do isporuke. Uključi zvuk.", "7,5 minuta, od prijave do isporuke. Uključi zvuk."],
@@ -104,6 +121,7 @@ export function setLang(l) {
   document.body.dataset.lang = lang;
   for (const el of document.querySelectorAll("[data-i18n]")) el.textContent = t(el.dataset.i18n);
   for (const el of document.querySelectorAll("[data-i18n-aria]")) el.setAttribute("aria-label", t(el.dataset.i18nAria));
+  for (const el of document.querySelectorAll("[data-i18n-ph]")) el.setAttribute("placeholder", t(el.dataset.i18nPh));
   const sel = document.getElementById("lang");
   if (sel && sel.value !== lang) sel.value = lang;
   document.dispatchEvent(new CustomEvent("hub-lang", { detail: lang }));

@@ -27,7 +27,7 @@ function render() {
     </section>
     <section class="player">
       <video id="video" controls preload="metadata" playsinline poster="/vodic/video/poster.jpg">
-        <source src="/vodic/video/tadex-hub-vodic.mp4" type="video/mp4">
+        <source src="/vodic/video/tadex-hub-vodic.mp4?v=2" type="video/mp4">
         Tvoj preglednik ne može prikazati video.
       </video>
       <p class="now" id="now">${CHAPTERS[0].title}</p>

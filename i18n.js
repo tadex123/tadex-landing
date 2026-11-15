@@ -59,6 +59,7 @@ const D = {
   "app.app2": ["Calculation history", "Povijest kalkulacija", "Povijest kalkulacija", "Istorija kalkulacija"],
   "app.crm": ["CRM", "CRM", "CRM", "CRM"],
   "app.email-kontakti": ["Email contacts", "Email kontakti", "Email kontakti", "Email kontakti"],
+  "app.vodic": ["Video guide", "Video vodič", "Video vodič", "Video vodič"],
   "app.logistika": ["Logistics", "Logistika", "Logistika", "Logistika"],
   "app.posiljke": ["Shipments", "Pošiljke", "Pošiljke", "Pošiljke"],
   "app.ture": ["Trips", "Ture", "Ture", "Ture"],

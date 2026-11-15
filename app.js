@@ -15,6 +15,9 @@ const APPS = [
   // Email kontakti: every approved hub member. Not an Admin checkbox, and not the Ponude/China gate.
   { id: "email-kontakti", title: "Email kontakti", label: "Otvori", href: "/email-kontakti/", everyone: true,
     icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/>' },
+  // Video vodič: one video through the whole hub, for every signed-in member.
+  { id: "vodic", title: "Video vodič", label: "Otvori", href: "/vodic/", everyone: true,
+    icon: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M10 9.5v5l4.5-2.5z"/>' },
   // app3 = Ponude · 报价单 · Quotations. On tadexhub.com the tile stays Coming soon; the /kalkulator/ponude app is unchanged.
   QUOTES_ENABLED
     ? { id: "app3", title: "Ponude · 报价单 · Quotations", label: "Otvori", href: "/kalkulator/ponude",

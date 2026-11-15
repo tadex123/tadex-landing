@@ -77,6 +77,7 @@ async function boot() {
   }
   if (!session) { goLogin(); return; }
   startHeartbeat("hub");
+  try { localStorage.setItem("hub-vodic-seen:" + session.user.id, "1"); } catch { /* private mode */ }
   const who = document.querySelector("#who");
   if (who) who.textContent = session.profile.full_name || session.user.email;
   document.querySelector("#signout")?.addEventListener("click", async () => { await signOut(); location.href = "/"; });

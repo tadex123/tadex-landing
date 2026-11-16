@@ -393,3 +393,25 @@ body[data-lang="en"] .thought-en{display:block;margin-top:4px;color:var(--v4-nav
 .fb-copy{background:transparent;border:1px solid #d9e4f0;border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer;color:#0c163a}
 .fb-send{background:#e92264;color:#fff;text-decoration:none;font-weight:700;border-radius:10px;padding:11px 18px}
 .fb-send:hover{background:#d01a57}
+
+/* Admin users: one card per person on every screen size — everything fits, no sideways scrolling. */
+.users thead{display:none}
+.users,.users tbody{display:block;width:100%}
+.users tr[data-id]{display:grid;grid-template-columns:minmax(190px,1.3fr) repeat(auto-fit,minmax(130px,1fr));gap:12px 20px;align-items:start;
+  border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:12px;background:#fff}
+.users tr[data-id] td{display:block;width:auto;border:0;padding:0;min-width:0;text-align:left}
+.users tr[data-id] td::before{content:attr(data-k);display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin-bottom:4px}
+.users tr[data-id] td.who::before,.users tr[data-id] td.act::before{content:none}
+.users tr[data-id] td.who{grid-row:span 2}
+.users tr[data-id] td[data-k="Apps"]{grid-column:1/-1;border-top:1px solid var(--line);padding-top:12px}
+.users tr[data-id] td.act{align-self:center;justify-self:end}
+.users .who-email{word-break:break-all}
+.users .rank{width:100%}
+.users .checks{gap:10px 18px}
+.users .checks .app-row{flex-wrap:wrap}
+.users tr.perm-row{display:block;margin-top:-6px}
+.users tr.perm-row td{display:block;width:100%;border:1px solid var(--line);border-top:0;border-radius:0 0 14px 14px}
+#admin-body{overflow-x:visible}
+@media (max-width:600px){.users tr[data-id]{grid-template-columns:1fr 1fr}.users tr[data-id] td.who{grid-column:1/-1;grid-row:auto}}
+.users tr[data-id] td[data-k="Apps"]{order:9}
+body[data-state="admin"] .wrap{max-width:1600px}

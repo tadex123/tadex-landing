@@ -32,6 +32,46 @@ const APPS = [
   { id: "flota", title: "Flota · Vozni park", label: "Otvori", href: "/kalkulator/flota", everyone: true,
     icon: '<rect x="3" y="10" width="18" height="7" rx="1.5"/><path d="M6 10V7h7l3 3"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/>' },
 ];
+// ---------- Companies: TADEX and STRONG sides of the hub ----------
+// profiles.companies = ["tadex"] | ["strong"] | ["tadex","strong"]. Admins always see both.
+// Until supabase/companies.sql runs, the column is missing: admins see both, everyone else Tadex.
+const COMPANIES = [{ id: "tadex", label: "TADEX" }, { id: "strong", label: "STRONG" }];
+function companiesOf(p) {
+  if (!p) return ["tadex"];
+  if (p.is_admin) return ["tadex", "strong"];
+  const c = Array.isArray(p.companies) ? p.companies.filter(x => x === "tadex" || x === "strong") : [];
+  return c.length ? c : ["tadex"];
+}
+const COMPANY_KEY = "hub-company";
+function currentCompany() {
+  const mine = companiesOf(session && session.profile);
+  let saved = null;
+  try { saved = localStorage.getItem(COMPANY_KEY); } catch {}
+  return mine.includes(saved) ? saved : mine[0];
+}
+function setCompany(id) {
+  try { localStorage.setItem(COMPANY_KEY, id); } catch {}
+  renderApps();
+}
+/** Hero line follows the side: "tim TADEX" / "tim STRONG". */
+function applyCompanyHero(id) {
+  const h = document.querySelector('[data-i18n="h1.b"]');
+  if (h) h.textContent = id === "strong" ? t("h1.b").replace(/TADEX/g, "STRONG") : t("h1.b");
+}
+// Strong apps: in preparation. Tiles show "U pripremi" and do not open until each app is finished.
+const STRONG_APPS = [
+  { id: "s-crm", title: "Kupci · CRM", note: "Upiti, ponude, kapare, isporuke",
+    icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M15.5 5.3a3 3 0 0 1 0 5.4M17.5 14.8c1.7.6 2.7 2.2 3 4.7"/>' },
+  { id: "s-predracun", title: "Predračun", note: "Bageri i paletari, Strong izgled",
+    icon: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15.5h5M10 8.5h2"/>' },
+  { id: "s-garancija", title: "Garancija i servis", note: "Serijski broj, kupac, servisni nalozi",
+    icon: '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>' },
+  { id: "s-skladiste", title: "Skladište", note: "Stanje po modelu, roba u dolasku",
+    icon: '<path d="M3 9l9-5 9 5v11H3z"/><path d="M8 20v-6h8v6"/><path d="M8 17h8"/>' },
+  { id: "s-posiljke", title: "Pošiljke", note: "Kontejneri iz Kine i dokumenti",
+    icon: '<path d="M3 7h18v10H3z"/><path d="M3 11h18"/><path d="M7 7V5h4v2"/>' },
+];
+
 const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }, { id: "crm", label: "CRM", noPerms: true },
   ...(QUOTES_ENABLED ? [{ id: "app3", label: "Ponude · Quotations", noPerms: true }] : [])];
 // One role model for every hub app: Admin / Direktor / Operator (Operator default). Enforced server-side by each app.
@@ -220,7 +260,40 @@ function hasAppAccess(appId, allowed) {
   return false;
 }
 
+function renderSwitch() {
+  const el = $("#company-switch");
+  if (!el) return;
+  const mine = companiesOf(session.profile);
+  const cur = currentCompany();
+  document.body.dataset.company = cur;
+  applyCompanyHero(cur);
+  el.hidden = mine.length < 2;
+  el.innerHTML = COMPANIES.filter(c => mine.includes(c.id)).map(c =>
+    `<button type="button" role="tab" class="cs-btn cs-${c.id}" data-company="${c.id}" aria-selected="${c.id === cur}">${c.label}</button>`).join("");
+  el.querySelectorAll("[data-company]").forEach(b => b.addEventListener("click", () => setCompany(b.dataset.company)));
+}
+
+function renderStrongApps() {
+  const grid = $("#apps-grid");
+  const vodic = APPS.find(a => a.id === "vodic");
+  grid.innerHTML = STRONG_APPS.map(a => `
+    <a class="tile placeholder strong" href="#" data-placeholder="1" title="${esc(a.note)}">
+      <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>
+      <span class="tile-title">${esc(a.title)}</span>
+      <span class="tile-label">${esc(a.note)}</span>
+      <span class="tile-badge">U pripremi</span>
+    </a>`).join("") + (vodic ? `
+    <a class="tile strong" href="${vodic.href}">
+      <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${vodic.icon}</svg></span>
+      <span class="tile-title">${esc(t("app.vodic"))}</span>
+      <span class="tile-label">${esc(t("open"))} <span aria-hidden="true">→</span></span>
+    </a>` : "");
+  grid.querySelectorAll("[data-placeholder]").forEach(el => el.addEventListener("click", e => e.preventDefault()));
+}
+
 function renderApps() {
+  renderSwitch();
+  if (currentCompany() === "strong") { renderStrongApps(); return; }
   const allowed = new Set(session.profile.apps || []);
   const isAdmin = !!session.profile.is_admin;
   const isOwner = session.user.email === "tadijasaric92@gmail.com";
@@ -351,7 +424,7 @@ async function renderAdmin() {
         <ul class="online-list"><li class="muted small">Loading…</li></ul>
       </section>
       <table class="users">
-        <thead><tr><th>Person</th><th>Rank</th><th>Hub role</th><th>Requested</th><th>Status</th><th>Apps</th><th>Team (Direktor)</th><th><span class="sr">Action</span></th></tr></thead>
+        <thead><tr><th>Person</th><th>Rank</th><th>Hub role</th><th>Requested</th><th>Status</th><th>Firme</th><th>Apps</th><th>Team (Direktor)</th><th><span class="sr">Action</span></th></tr></thead>
         <tbody>${users.map(u => {
           const self = u.id === session.user.id;
           return `<tr data-id="${esc(u.id)}">
@@ -360,6 +433,8 @@ async function renderAdmin() {
             <td data-k="Hub role"><span class="role ${u.is_admin ? "admin" : "operator"}">${u.is_admin ? "Admin" : "Operator"}</span></td>
             <td data-k="Requested">${esc(fmtDate(u.created_at))}</td>
             <td data-k="Status"><span class="badge ${u.approved ? "ok" : "wait"}">${u.approved ? "Approved" : "Pending"}</span></td>
+            <td data-k="Firme"><div class="checks firms">${u.is_admin ? '<span class="muted small">Admin — obje</span>' : COMPANIES.map(c =>
+              `<label><input type="checkbox" data-firm="${c.id}" ${companiesOf(u).includes(c.id) ? "checked" : ""}> ${c.label}</label>`).join("")}</div></td>
             <td data-k="Apps"><div class="checks">${ADMIN_APPS.map(a => {
               const on = (u.apps || []).includes(a.id);
               const role = (u.app_roles || {})[a.id] || defaultRole(a.id);
@@ -376,6 +451,18 @@ async function renderAdmin() {
     body.querySelectorAll("tr[data-id]").forEach(tr => {
       const id = tr.dataset.id;
       const current = users.find(x => x.id === id);
+      tr.querySelectorAll("input[data-firm]").forEach(cb => cb.addEventListener("change", async () => {
+        const firms = [...tr.querySelectorAll("input[data-firm]:checked")].map(x => x.dataset.firm);
+        if (!firms.length) { cb.checked = true; return; } // at least one side
+        tr.querySelectorAll("input[data-firm]").forEach(x => x.disabled = true);
+        try {
+          const saved = await auth.updateUser(id, { companies: firms });
+          current.companies = saved.companies;
+        } catch (err) {
+          cb.checked = !cb.checked;
+          alert(err.message || "Could not save the change.");
+        } finally { tr.querySelectorAll("input[data-firm]").forEach(x => x.disabled = false); }
+      }));
       const rolesNow = () => {
         const roles = { ...(current.app_roles || {}) };
         tr.querySelectorAll("select[data-role-for]").forEach(sel => {

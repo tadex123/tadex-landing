@@ -393,3 +393,26 @@ body[data-lang="en"] .thought-en{display:block;margin-top:4px;color:var(--v4-nav
 .fb-copy{background:transparent;border:1px solid #d9e4f0;border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer;color:#0c163a}
 .fb-send{background:#e92264;color:#fff;text-decoration:none;font-weight:700;border-radius:10px;padding:11px 18px}
 .fb-send:hover{background:#d01a57}
+
+/* TADEX / STRONG switch */
+.apps-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.apps-head h2{margin:0}
+.company-switch{display:inline-flex;padding:4px;border-radius:999px;background:#fff;border:1px solid var(--v4-line,#dbe5ef);gap:4px}
+.company-switch[hidden]{display:none}
+.cs-btn{border:0;background:transparent;font:inherit;font-weight:800;letter-spacing:.08em;font-size:.82rem;padding:8px 20px;border-radius:999px;color:var(--muted);cursor:pointer}
+.cs-btn:hover{color:var(--navy)}
+.cs-btn[aria-selected="true"].cs-tadex{background:var(--v4-blue,#1a4b86);color:#fff}
+.cs-btn[aria-selected="true"].cs-strong{background:#e07b00;color:#fff}
+/* Strong tiles: orange accent */
+.tile.strong .tile-ic{background:#fff3e0}
+.tile.strong .tile-ic svg{stroke:#e07b00}
+.tile.strong:hover{border-color:#e07b00;box-shadow:0 12px 26px rgba(224,123,0,.14)}
+.tile.strong:not(.placeholder) .tile-label{color:#b86200}
+.tile.placeholder.strong{background:#fff;border:1px dashed #f0c48a;align-items:flex-start;justify-content:flex-start;text-align:left;cursor:default}
+.tile.placeholder.strong:hover{transform:none;background:#fff;box-shadow:none;border-color:#f0c48a}
+.tile.placeholder.strong:hover .tile-ic{transform:none;background:#fff3e0}
+.tile.placeholder.strong .tile-ic{margin-bottom:auto}
+.tile.placeholder.strong .tile-title{margin-top:18px;color:var(--navy)}
+.tile-badge{position:absolute;top:16px;right:16px;font-size:.7rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#b86200;background:#fff3e0;border-radius:999px;padding:4px 10px}
+.checks.firms label{display:flex;align-items:center;gap:6px;font-weight:700;font-size:.85rem;white-space:nowrap}
+body[data-company="strong"] #team-kurs{display:none!important}

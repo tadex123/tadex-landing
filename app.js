@@ -32,32 +32,37 @@ const APPS = [
   { id: "flota", title: "Flota · Vozni park", label: "Otvori", href: "/kalkulator/flota", everyone: true,
     icon: '<rect x="3" y="10" width="18" height="7" rx="1.5"/><path d="M6 10V7h7l3 3"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/>' },
 ];
-// ---------- Companies: TADEX and STRONG sides of the hub ----------
-// profiles.companies = ["tadex"] | ["strong"] | ["tadex","strong"]. Admins always see both.
-// Until supabase/companies.sql runs, the column is missing: admins see both, everyone else Tadex.
-const COMPANIES = [{ id: "tadex", label: "TADEX" }, { id: "strong", label: "STRONG" }];
+// ---------- Companies: TADEX, STRONG and RUYI sides of the hub ----------
+// profiles.companies = any of "tadex" | "strong" | "ruyi". Admins see all.
+// Until supabase/companies.sql runs, the column is missing: admins see all, everyone else Tadex.
+// Everyone sees every side in the switch; a side you have no access to shows its tiles greyed with a lock.
+// The calculator/CRM/logistics servers check the company too, so a link alone never opens another side.
+const COMPANIES = [{ id: "tadex", label: "TADEX" }, { id: "strong", label: "STRONG" }, { id: "ruyi", label: "RUYI" }];
+const COMPANY_IDS = COMPANIES.map(c => c.id);
 function companiesOf(p) {
   if (!p) return ["tadex"];
-  if (p.is_admin) return ["tadex", "strong"];
-  const c = Array.isArray(p.companies) ? p.companies.filter(x => x === "tadex" || x === "strong") : [];
-  return c.length ? c : ["tadex"];
+  if (p.is_admin) return [...COMPANY_IDS];
+  const c = Array.isArray(p.companies) ? p.companies.filter(x => COMPANY_IDS.includes(x)) : [];
+  return c.length ? [...new Set(c)] : ["tadex"];
 }
 const COMPANY_KEY = "hub-company";
 function currentCompany() {
   const mine = companiesOf(session && session.profile);
   let saved = null;
   try { saved = localStorage.getItem(COMPANY_KEY); } catch {}
-  return mine.includes(saved) ? saved : mine[0];
+  return COMPANY_IDS.includes(saved) ? saved : mine[0];
 }
 function setCompany(id) {
   try { localStorage.setItem(COMPANY_KEY, id); } catch {}
   renderApps();
 }
-/** Hero line follows the side: "tim TADEX" / "tim STRONG". */
+/** Hero line follows the side: "tim TADEX" / "tim STRONG" / "tim RUYI". */
 function applyCompanyHero(id) {
   const h = document.querySelector('[data-i18n="h1.b"]');
-  if (h) h.textContent = id === "strong" ? t("h1.b").replace(/TADEX/g, "STRONG") : t("h1.b");
+  const label = (COMPANIES.find(c => c.id === id) || COMPANIES[0]).label;
+  if (h) h.textContent = t("h1.b").replace(/TADEX/g, label);
 }
+const LOCK_SVG = '<svg class="lock-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 // Strong apps: in preparation. Tiles show "U pripremi" and do not open until each app is finished.
 const STRONG_APPS = [
   { id: "s-crm", title: "Kupci · CRM", note: "Upiti, ponude, kapare, isporuke",
@@ -70,6 +75,12 @@ const STRONG_APPS = [
     icon: '<path d="M3 9l9-5 9 5v11H3z"/><path d="M8 20v-6h8v6"/><path d="M8 17h8"/>' },
   { id: "s-posiljke", title: "Pošiljke", note: "Kontejneri iz Kine i dokumenti",
     icon: '<path d="M3 7h18v10H3z"/><path d="M3 11h18"/><path d="M7 7V5h4v2"/>' },
+];
+// RUYI (decor & small furniture shop) is one app of its own: a single tile that opens the whole RUYI app
+// (products from the supplier invoice, photo approval, Instagram plan, stock & sales). In preparation.
+const RUYI_APPS = [
+  { id: "ruyi", title: "RUYI", note: "Maloprodaja · proizvodi, slike, Instagram, zaliha i prodaja",
+    icon: '<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>' },
 ];
 
 const ADMIN_APPS = [{ id: "calculator", label: "Calculator" }, { id: "app2", label: "Povijest kalkulacija" }, { id: "crm", label: "CRM", noPerms: true },
@@ -266,24 +277,39 @@ function renderSwitch() {
   const mine = companiesOf(session.profile);
   const cur = currentCompany();
   document.body.dataset.company = cur;
+  document.body.dataset.companyLocked = mine.includes(cur) ? "0" : "1";
   applyCompanyHero(cur);
-  el.hidden = mine.length < 2;
-  el.innerHTML = COMPANIES.filter(c => mine.includes(c.id)).map(c =>
-    `<button type="button" role="tab" class="cs-btn cs-${c.id}" data-company="${c.id}" aria-selected="${c.id === cur}">${c.label}</button>`).join("");
+  el.hidden = false;
+  el.innerHTML = COMPANIES.map(c => {
+    const locked = !mine.includes(c.id);
+    return `<button type="button" role="tab" class="cs-btn cs-${c.id}${locked ? " locked" : ""}" data-company="${c.id}" aria-selected="${c.id === cur}"${locked ? ' title="Nemaš pristup — javi se adminu"' : ""}>${locked ? LOCK_SVG : ""}${c.label}</button>`;
+  }).join("");
   el.querySelectorAll("[data-company]").forEach(b => b.addEventListener("click", () => setCompany(b.dataset.company)));
 }
 
-function renderStrongApps() {
+/** Greyed tiles with a lock: the side exists, this person has no access to it. Never links anywhere. */
+function lockedTiles(list, cls) {
+  return list.map(a => `
+    <div class="tile locked ${cls}" aria-disabled="true" title="Nemaš pristup — javi se adminu">
+      <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>
+      <span class="tile-title">${esc(a.titleText || a.title)}</span>
+      <span class="tile-label">Nemaš pristup</span>
+      <span class="tile-lock">${LOCK_SVG}</span>
+    </div>`).join("");
+}
+
+function renderSideApps(company) {
   const grid = $("#apps-grid");
+  const list = company === "ruyi" ? RUYI_APPS : STRONG_APPS;
   const vodic = APPS.find(a => a.id === "vodic");
-  grid.innerHTML = STRONG_APPS.map(a => `
-    <a class="tile placeholder strong" href="#" data-placeholder="1" title="${esc(a.note)}">
+  grid.innerHTML = list.map(a => `
+    <a class="tile placeholder ${company}" href="#" data-placeholder="1" title="${esc(a.note)}">
       <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>
       <span class="tile-title">${esc(a.title)}</span>
       <span class="tile-label">${esc(a.note)}</span>
       <span class="tile-badge">U pripremi</span>
     </a>`).join("") + (vodic ? `
-    <a class="tile strong" href="${vodic.href}">
+    <a class="tile ${company}" href="${vodic.href}">
       <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${vodic.icon}</svg></span>
       <span class="tile-title">${esc(t("app.vodic"))}</span>
       <span class="tile-label">${esc(t("open"))} <span aria-hidden="true">→</span></span>
@@ -291,9 +317,19 @@ function renderStrongApps() {
   grid.querySelectorAll("[data-placeholder]").forEach(el => el.addEventListener("click", e => e.preventDefault()));
 }
 
+function renderLockedSide(company) {
+  const grid = $("#apps-grid");
+  const label = (COMPANIES.find(c => c.id === company) || {}).label || company;
+  const list = company === "ruyi" ? RUYI_APPS : company === "strong" ? STRONG_APPS
+    : APPS.filter(a => !a.public && !a.adminDraft && a.id !== "vodic").map(a => ({ ...a, titleText: t("app." + a.id) !== "app." + a.id ? t("app." + a.id) : a.title }));
+  grid.innerHTML = `<p class="locked-note">${LOCK_SVG} Nemaš pristup ${esc(label)} aplikacijama. Ako ti trebaju, javi se adminu.</p>` + lockedTiles(list, company);
+}
+
 function renderApps() {
   renderSwitch();
-  if (currentCompany() === "strong") { renderStrongApps(); return; }
+  const side = currentCompany();
+  if (!companiesOf(session.profile).includes(side)) { renderLockedSide(side); return; }
+  if (side !== "tadex") { renderSideApps(side); return; }
   const allowed = new Set(session.profile.apps || []);
   const isAdmin = !!session.profile.is_admin;
   const isOwner = session.user.email === "tadijasaric92@gmail.com";
@@ -433,7 +469,7 @@ async function renderAdmin() {
             <td data-k="Hub role"><span class="role ${u.is_admin ? "admin" : "operator"}">${u.is_admin ? "Admin" : "Operator"}</span></td>
             <td data-k="Requested">${esc(fmtDate(u.created_at))}</td>
             <td data-k="Status"><span class="badge ${u.approved ? "ok" : "wait"}">${u.approved ? "Approved" : "Pending"}</span></td>
-            <td data-k="Firme"><div class="checks firms">${u.is_admin ? '<span class="muted small">Admin — obje</span>' : COMPANIES.map(c =>
+            <td data-k="Firme"><div class="checks firms">${u.is_admin ? '<span class="muted small">Admin — sve</span>' : COMPANIES.map(c =>
               `<label><input type="checkbox" data-firm="${c.id}" ${companiesOf(u).includes(c.id) ? "checked" : ""}> ${c.label}</label>`).join("")}</div></td>
             <td data-k="Apps"><div class="checks">${ADMIN_APPS.map(a => {
               const on = (u.apps || []).includes(a.id);

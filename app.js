@@ -69,7 +69,7 @@ const STRONG_APPS = [
     icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M15.5 5.3a3 3 0 0 1 0 5.4M17.5 14.8c1.7.6 2.7 2.2 3 4.7"/>' },
   { id: "s-predracun", title: "Predračun", note: "Bageri i paletari, Strong izgled",
     icon: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15.5h5M10 8.5h2"/>' },
-  { id: "s-garancija", title: "Garancija i servis", note: "Serijski broj, kupac, servisni nalozi",
+  { id: "s-garancija", title: "Garancija i servis", note: "Serijski broj, kupac, servisni nalozi", href: "/kalkulator/strong/garancija",
     icon: '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>' },
   { id: "s-skladiste", title: "Skladište", note: "Stanje po modelu, roba u dolasku",
     icon: '<path d="M3 9l9-5 9 5v11H3z"/><path d="M8 20v-6h8v6"/><path d="M8 17h8"/>' },
@@ -302,7 +302,13 @@ function renderSideApps(company) {
   const grid = $("#apps-grid");
   const list = company === "ruyi" ? RUYI_APPS : STRONG_APPS;
   const vodic = APPS.find(a => a.id === "vodic");
-  grid.innerHTML = list.map(a => `
+  // An app with an href is ready and opens; the others stay "U pripremi".
+  grid.innerHTML = list.map(a => a.href ? `
+    <a class="tile ${company}" href="${a.href}" title="${esc(a.note)}">
+      <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>
+      <span class="tile-title">${esc(a.title)}</span>
+      <span class="tile-label">${esc(a.note)}</span>
+    </a>` : `
     <a class="tile placeholder ${company}" href="#" data-placeholder="1" title="${esc(a.note)}">
       <span class="tile-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg></span>
       <span class="tile-title">${esc(a.title)}</span>

@@ -86,6 +86,7 @@ const D = {
   "app.posiljke": ["Shipments", "Pošiljke", "Pošiljke", "Pošiljke"],
   "app.ture": ["Trips", "Ture", "Ture", "Ture"],
   "app.flota": ["Fleet", "Flota", "Flota", "Flota"],
+  "app.sajmovi": ["Trade fairs", "Sajmovi", "Sajmovi", "Sajmovi"],
   "app.draft": ["draft", "nacrt", "nacrt", "nacrt"],
   "app.kalendar": ["My calendar", "Moj kalendar", "Moj kalendar", "Moj kalendar"],
   "app.kalendar.label": ["Private schedule", "Privatni raspored", "Privatni raspored", "Privatni raspored"],

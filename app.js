@@ -30,7 +30,9 @@ const APPS = [
   { id: "ture", title: "Ture", label: "Otvori", href: "/kalkulator/ture", everyone: true,
     icon: '<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M3 13V8h9l4 5h3v5h-2"/><path d="M3 13h10"/>' },
   { id: "flota", title: "Flota · Vozni park", label: "Otvori", href: "/kalkulator/flota", everyone: true,
-    icon: '<rect x="3" y="10" width="18" height="7" rx="1.5"/><path d="M6 10V7h7l3 3"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/>' },
+    icon: '<rect x="3" y="10" width="18" height="7" rx="1.5"/><path d="M6 10V7h7l3 3"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/>' },  // Sajmovi: admin only (Tadija's trade-fair overview). Server also refuses non-admins.
+  { id: "sajmovi", title: "Sajmovi", label: "Otvori", href: "/kalkulator/sajmovi", adminOnly: true,
+    icon: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8 14h3M8 17h6"/>' },
 ];
 // ---------- Companies: TADEX, STRONG and RUYI sides of the hub ----------
 // profiles.companies = any of "tadex" | "strong" | "ruyi". Admins see all.
@@ -339,7 +341,7 @@ function renderApps() {
   const allowed = new Set(session.profile.apps || []);
   const isAdmin = !!session.profile.is_admin;
   const isOwner = session.user.email === "tadijasaric92@gmail.com";
-  const visible = APPS.filter(a => a.public || hasAppAccess(a.id, allowed) || (a.adminDraft && isAdmin));
+  const visible = APPS.filter(a => a.public || (!a.adminOnly && hasAppAccess(a.id, allowed)) || ((a.adminDraft || a.adminOnly) && isAdmin));
   const grid = $("#apps-grid");
   const ownerTile = isOwner ? `
     <a class="tile" href="/kalendar/">

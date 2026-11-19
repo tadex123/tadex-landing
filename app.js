@@ -67,7 +67,7 @@ function applyCompanyHero(id) {
 const LOCK_SVG = '<svg class="lock-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 // Strong apps: in preparation. Tiles show "U pripremi" and do not open until each app is finished.
 const STRONG_APPS = [
-  { id: "s-crm", title: "Kupci · CRM", note: "Upiti, ponude, kapare, isporuke",
+  { id: "s-crm", title: "Kupci · CRM", note: "Upiti, ponude, kapare, isporuke", href: "/kalkulator/strong/crm",
     icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M15.5 5.3a3 3 0 0 1 0 5.4M17.5 14.8c1.7.6 2.7 2.2 3 4.7"/>' },
   { id: "s-predracun", title: "Predračun", note: "Bageri i paletari, Strong izgled",
     icon: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15.5h5M10 8.5h2"/>' },

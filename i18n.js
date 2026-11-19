@@ -1,6 +1,7 @@
-// Hub languages. Signed out the hub is in English; signed in, each person picks BS / HR / SR / EN
-// (saved per device in localStorage, default Bosnian). Covers the hub page only, not the Admin panel
-// or the apps behind the tiles.
+// Hub languages: BS / HR / SR / EN, picked in the header both signed out and signed in (saved per device
+// in localStorage). With no saved choice the browser language decides (bs / hr / sr, incl. sh and cnr);
+// otherwise English when signed out and Bosnian when signed in. Covers the hub page only, not the Admin
+// panel or the apps behind the tiles.
 export const LANGS = [
   ["bs", "BS", "Bosanski"],
   ["hr", "HR", "Hrvatski"],
@@ -12,6 +13,8 @@ const DEFAULT_SIGNED_IN = "bs";
 
 // [en, bs, hr, sr]
 const D = {
+  "doc.title": ["TADEX Hub · Team workspace", "TADEX Hub · Radni prostor tima", "TADEX Hub · Radni prostor tima", "TADEX Hub · Radni prostor tima"],
+  "eyebrow": ["TADEX team workspace", "Radni prostor tima TADEX", "Radni prostor tima TADEX", "Radni prostor tima TADEX"],
   "h1.a": ["Welcome,", "Dobro došli,", "Dobro došli,", "Dobro došli,"],
   "h1.b": ["TADEX team", "tim TADEX", "tim TADEX", "tim TADEX"],
   "sub.out": ["Your TADEX team workspace. Sign in to continue.", "Radni prostor tima TADEX. Prijavi se i nastavi gdje si stao.", "Radni prostor tima TADEX. Prijavi se i nastavi gdje si stao.", "Radni prostor tima TADEX. Prijavi se i nastavi gde si stao."],
@@ -106,9 +109,28 @@ export function t(k, vars) {
   return s;
 }
 
-export function savedLang() {
+/** The language this person explicitly picked on this device, or null. */
+export function pickedLang() {
   try { const v = localStorage.getItem(KEY); if (v && v in IDX) return v; } catch { /* storage blocked */ }
-  return DEFAULT_SIGNED_IN;
+  return null;
+}
+
+/** First bs / hr / sr in the browser's language list (sh = Serbo-Croatian, cnr = Montenegrin -> sr), or null. */
+export function browserLang() {
+  const map = { bs: "bs", hr: "hr", sr: "sr", sh: "sr", cnr: "sr", me: "sr" };
+  const list = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ""]);
+  for (const tag of list) { const base = String(tag).toLowerCase().split(/[-_]/)[0]; if (map[base]) return map[base]; }
+  return null;
+}
+
+/** Signed-in language: own choice, else browser language, else Bosnian. */
+export function savedLang() {
+  return pickedLang() || browserLang() || DEFAULT_SIGNED_IN;
+}
+
+/** Signed-out language: own choice, else browser language, else English (e.g. colleagues in China). */
+export function signedOutLang() {
+  return pickedLang() || browserLang() || "en";
 }
 
 export function saveLang(l) {
@@ -120,6 +142,7 @@ export function setLang(l) {
   lang = l in IDX ? l : "en";
   document.documentElement.lang = lang;
   document.body.dataset.lang = lang;
+  document.title = t("doc.title");
   for (const el of document.querySelectorAll("[data-i18n]")) el.textContent = t(el.dataset.i18n);
   for (const el of document.querySelectorAll("[data-i18n-aria]")) el.setAttribute("aria-label", t(el.dataset.i18nAria));
   for (const el of document.querySelectorAll("[data-i18n-ph]")) el.setAttribute("placeholder", t(el.dataset.i18nPh));

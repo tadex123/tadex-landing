@@ -203,8 +203,9 @@ function setStatus(text, kind = "info") {
 
 function setState(state) {
   document.body.dataset.state = state; // out | apps | admin
-  // Signed out: English. Signed in: the language this person chose on this device (default Bosnian).
-  i18n.setLang(state === "out" ? "en" : i18n.savedLang());
+  // The language this person chose on this device; with no choice yet, the browser language
+  // (bs / hr / sr), else English signed out and Bosnian signed in.
+  i18n.setLang(state === "out" ? i18n.signedOutLang() : i18n.savedLang());
   $("#sub").textContent = t(state === "out" ? "sub.out" : "sub.in");
 }
 
@@ -692,6 +693,8 @@ async function doSignOut(e) {
 }
 
 async function init() {
+  // Apply the signed-out language before setMode() writes the form texts below.
+  i18n.setLang(i18n.signedOutLang());
   $("#form").addEventListener("submit", onSubmit);
   $("#toggle").addEventListener("click", e => { e.preventDefault(); setMode(mode === "signin" ? "request" : "signin"); $("#email").focus(); });
   $("#vodic-watch").addEventListener("click", () => markVodicSeen());
@@ -699,7 +702,7 @@ async function init() {
   $("#vodic-dismiss").addEventListener("click", () => { markVodicSeen(); renderVodicNotice(); });
   $("#forgot").addEventListener("click", e => { e.preventDefault(); setMode("reset"); $("#email").focus(); });
   $("#signout").addEventListener("click", doSignOut);
-  // Language picker (signed in only): save the choice and redraw the texts that JS writes.
+  // Language picker (header, signed out and signed in): save the choice and redraw the texts that JS writes.
   $("#lang").addEventListener("change", e => {
     i18n.saveLang(e.target.value);
     setState(document.body.dataset.state);

@@ -3,17 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TADEX Hub · Radni prostor tima</title>
-<meta name="description" content="TADEX Hub – welcome, TADEX team. Sign in to continue.">
+<title>TADEX Hub · Radni prostor tima · Team workspace</title>
+<meta name="description" content="TADEX Hub – radni prostor tima TADEX · TADEX team workspace.">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0c163a">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TADEX Hub">
-<meta property="og:title" content="TADEX Hub – Welcome, team">
-<meta property="og:description" content="Dobrodošli, tim TADEX. Sign in to continue.">
+<meta property="og:title" content="TADEX Hub · Radni prostor tima">
+<meta property="og:description" content="Radni prostor tima TADEX · TADEX team workspace">
 <meta property="og:url" content="https://tadexhub.com/">
-<meta name="twitter:card" content="summary">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234FB3E8'/%3E%3Cpath d='M16 18h32v8H36v24h-8V26H16z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:image" content="https://tadexhub.com/assets/og-tadex-hub.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="TADEX Hub">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://tadexhub.com/assets/og-tadex-hub.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="modulepreload" href="/vendor/supabase.js">
 <link rel="stylesheet" href="styles.css">
@@ -23,14 +30,16 @@
 <body class="booting" data-state="out">
 <header>
  <div class="wrap bar">
-  <a class="logo" href="/" aria-label="TADEX Hub početna"><span class="logo-word">TADEX</span><span class="logo-hub">Hub</span></a>
+  <a class="logo" href="/" aria-label="TADEX Hub"><span class="logo-word">TADEX</span><span class="logo-hub">Hub</span></a>
+  <div class="bar-right">
+  <select id="lang" class="lang" aria-label="Jezik / Language" data-i18n-aria="lang.label"><option value="bs" title="Bosanski">BS</option><option value="hr" title="Hrvatski">HR</option><option value="sr" title="Srpski">SR</option><option value="en" title="English">EN</option></select>
   <a class="pill out-only" href="#signin" data-i18n="nav.login">Sign in</a>
   <div class="chip in-only">
    <span class="avatar" id="chip-initial" aria-hidden="true"></span>
    <span class="chip-email" id="chip-email"></span>
-   <select id="lang" class="lang" aria-label="Language" data-i18n-aria="lang.label"><option value="bs">BS</option><option value="hr">HR</option><option value="sr">SR</option><option value="en">EN</option></select>
    <a href="#admin" id="admin-link" class="chip-link" hidden>Admin</a>
    <a href="#" id="signout" class="chip-link" data-i18n="nav.signout">Sign out</a>
+  </div>
   </div>
  </div>
 </header>
@@ -39,7 +48,7 @@
  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grid-bg"></div>
  <div class="wrap inner">
   <div class="greet">
-   <span class="eyebrow"><span class="dot"></span>Dobrodošli, tim TADEX</span>
+   <span class="eyebrow"><span class="dot"></span><span data-i18n="eyebrow">TADEX team workspace</span></span>
    <h1><span data-i18n="h1.a">Welcome,</span><br><span class="hl" data-i18n="h1.b">TADEX team</span></h1>
    <p class="sub" id="sub">Your TADEX team workspace. Sign in to continue.</p>
    <span class="preview-flag" id="preview-flag" hidden data-i18n="preview">Preview · sample data</span>
@@ -71,9 +80,10 @@
   <section class="card out-only" id="signin" aria-labelledby="form-title">
    <div class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
    <h2 id="form-title">Sign in</h2>
-   <form id="form" novalidate>
+   <!-- method="post": if app.js ever fails to load, the browser must not put email + password in the URL. -->
+   <form id="form" method="post" action="/" novalidate>
     <label class="field request-only" id="name-field" hidden><span data-i18n="field.name">Full name</span>
-     <input id="full-name" name="full_name" type="text" autocomplete="name" placeholder="Ime Prezime" maxlength="120"></label>
+     <input id="full-name" name="full_name" type="text" autocomplete="name" placeholder="Ime Prezime · Full name" maxlength="120"></label>
     <label class="field"><span data-i18n="field.email">Email</span>
      <input id="email" name="email" type="email" autocomplete="email" placeholder="ime@tadexgroup.ba" required></label>
     <label class="field" id="password-field"><span data-i18n="field.password">Password</span>

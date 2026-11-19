@@ -206,7 +206,7 @@ body[data-state="admin"] .no-admin{display:none!important}
 .route-band{position:relative;width:100%;background:linear-gradient(180deg,rgba(14,76,128,.0),rgba(14,76,128,.30) 18%,rgba(14,76,128,.34) 82%,rgba(14,76,128,0));border-top:1px solid rgba(255,255,255,.14);border-bottom:1px solid rgba(255,255,255,.14)}
 .route-canvas{display:block;width:100%;height:clamp(340px,36vw,560px)}
 @media (max-width:860px){.thought{max-width:none}}
-@media (max-width:600px){.thought-k{border-radius:10px;font-size:.7rem;letter-spacing:.1em}.thought-sep{display:none}.route{margin-top:36px}.route-canvas{height:330px}.route-head{font-size:.72rem}.route-legend{gap:10px;font-size:.7rem}
+@media (max-width:600px){.thought-k{border-radius:10px;font-size:.7rem;letter-spacing:.1em}.thought-sep{display:none}.route{margin-top:36px}.route-canvas{height:min(500px,calc(100vw * 1.28))}.route-head{font-size:.72rem}.route-legend{gap:10px;font-size:.7rem}
  .thought{padding:18px 16px;gap:13px;border-radius:20px}.thought-ic{width:42px;height:42px;border-radius:13px}.thought-ic svg{width:22px;height:22px}.thought-bs{font-size:1.3rem}.thought-en{font-size:.98rem}.thought::after{font-size:5rem;top:-10px}}
 @media (prefers-reduced-motion:reduce){.thought{animation:none}}
 
@@ -342,7 +342,10 @@ h1 .hl{background:none;color:var(--v4-blue)}
 @media (max-width:600px){.logo-word{font-size:1.15rem}}
 .eyebrow{display:none}
 @media (max-width:860px){body[data-state="out"] .pill{display:none} body[data-state="out"] #signin{width:100%}}
-/* Language picker in the header chip (signed in) */
+/* Header right side: language picker (signed out and signed in) + Sign in pill / account chip */
+.bar-right{display:flex;align-items:center;gap:10px;min-width:0}
+.bar-right .lang{padding:6px 8px;font-size:.85rem}
+/* Language picker */
 .lang{font:inherit;font-size:.82rem;font-weight:700;color:#fff;background:#0c163a;border:1px solid #3a4a78;border-radius:8px;padding:4px 6px;cursor:pointer}
 .lang:focus{outline:2px solid #fff;outline-offset:1px}
 /* English: show the English thought, hide the Bosnian one */

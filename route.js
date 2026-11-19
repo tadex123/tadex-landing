@@ -75,7 +75,7 @@ const PORTS = [
   { name: "Rt dobre nade · Cape of Good Hope", short: "Cape of Good Hope", lon: 18.47, lat: -34.36, dx: -8, dy: 18, right: true },
   { name: "Ploče", lon: 17.43, lat: 43.05, dot: true },
   { name: "Rijeka", lon: 14.44, lat: 45.33, dot: true },
-  { name: "Koper · Rijeka · Ploče", short: "Koper · Rijeka · Ploče", lon: 13.73, lat: 45.55, dx: -128, dy: -6, sdx: -72, sdy: 20 },
+  { name: "Koper · Rijeka · Ploče", short: "Koper · Rijeka · Ploče", lon: 13.73, lat: 45.55, leftOf: true },
 ];
 const SEA_LABELS = [
   { name: "Južno kinesko more", lon: 113, lat: 13.5 }, { name: "Indijski ocean", lon: 72, lat: -6 },
@@ -110,7 +110,15 @@ export function mountRoute(canvas) {
     canvas.width = W * dpr; canvas.height = H * dpr;
     // Equirectangular with a slight vertical stretch; fit lon -22..128 and lat -40..52, centered on the lanes.
     const K = 1.15, s = Math.min(H / (92 * K), W / 150), c0 = 53, c1 = 6;
-    P = (lon, lat) => [W / 2 + (lon - c0) * s, H / 2 + (c1 - lat) * s * K];
+    // Where the BiH inset goes, so it never covers the sea lanes:
+    //  - "below": phones, where the map fills the width; the map moves to the top and the inset gets the strip under it.
+    //  - "right": wide screens, where the map is height-bound; the inset sits over the empty Pacific, right of the
+    //    Guangzhou/Malacca lanes (east of 112°E) and south of the Guangzhou feeder (below 16°N).
+    //  - "corner": the old bottom-right box, only if neither fits.
+    const m = small ? 10 : 18, mapH = 92 * K * s, freeBelow = H - mapH - 2 * m;
+    const insetMode = small && freeBelow >= 110 ? "below" : "side";
+    const cy = insetMode === "below" ? m / 2 + mapH / 2 : H / 2;
+    P = (lon, lat) => [W / 2 + (lon - c0) * s, cy + (c1 - lat) * s * K];
 
     // ----- static background -----
     bg = document.createElement("canvas"); bg.width = W * dpr; bg.height = H * dpr;
@@ -154,6 +162,15 @@ export function mountRoute(canvas) {
       g.font = `600 ${small ? 9 : 11}px Inter, system-ui, sans-serif`; g.fillStyle = "rgba(255,255,255,.72)";
       g.textAlign = p.right ? "left" : "left";
       const label = small && p.short ? p.short : p.name;
+      if (p.leftOf) {
+        // Desktop: right-aligned just left of the dot, clear of the BiH marker east of it.
+        // Phones: the dot sits near the left edge, so the label goes above it instead (kept inside the canvas).
+        if (small) {
+          const w = g.measureText(label).width, lx = Math.max(4, x - w / 2);
+          g.fillText(label, lx, y - 12); continue;
+        }
+        g.textAlign = "right"; g.fillText(label, x - 9, y - 6); g.textAlign = "left"; continue;
+      }
       g.fillText(label, x + (small && p.sdx != null ? p.sdx : p.dx), y + (small && p.sdy != null ? p.sdy : p.dy));
     }
     g.textAlign = "left";
@@ -164,8 +181,18 @@ export function mountRoute(canvas) {
     ends.bih = { S: P(PLOCE.lon, PLOCE.lat), E: P(SA.lon, SA.lat) };
 
     // ----- BiH inset (bottom-right): Ploče + Rijeka -> cities land legs; wide enough to show the Croatian coast -----
-    const iw = small ? Math.min(176, W * 0.46) : 340, ih = small ? 136 : 246, m = small ? 10 : 18;
-    IB = { x: W - iw - m, y: H - ih - m, w: iw, h: ih };
+    let iw = small ? Math.min(176, W * 0.46) : 340, ih = small ? 136 : 246;
+    if (insetMode === "below") {
+      const top = cy + mapH / 2 + m;
+      iw = W - 2 * m; ih = Math.min(260, H - top - m);
+      IB = { x: m, y: top, w: iw, h: ih };
+    } else {
+      // +26 px keeps clear of the "Singapur · Malacca" label, which runs east of its dot.
+      const left = P(112, 0)[0] + 26, top = P(0, 16)[1] + 10;
+      const aw = W - m - left, ah = H - m - top, minW = small ? 150 : 210, minH = small ? 110 : 150;
+      if (aw >= minW && ah >= minH) { iw = Math.min(iw, aw); ih = Math.min(ih, ah); }
+      IB = { x: W - iw - m, y: H - ih - m, w: iw, h: ih };
+    }
     const L0 = 13.2, L1 = 20.0, T = 46.0, B = 42.35;
     const ks = Math.min((iw - 20) / (L1 - L0), (ih - 34) / ((T - B) * 1.35));
     const ox = IB.x + (iw - (L1 - L0) * ks) / 2, oy = IB.y + 26 + ((ih - 34) - (T - B) * 1.35 * ks) / 2;

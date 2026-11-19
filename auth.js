@@ -67,10 +67,20 @@ export function hubDb() {
   return sb();
 }
 
+const PROFILE_COLS = "id,email,full_name,approved,is_admin,apps,app_roles,rank,app_perms,direktor_id,created_at";
+// `companies` (tadex / strong) is added by supabase/companies.sql. Until that runs, fall back to the old column set.
+let hasCompanies = true;
+async function selectProfiles(build) {
+  if (hasCompanies) {
+    const r = await build(PROFILE_COLS + ",companies");
+    if (!r.error || !/companies/i.test(r.error.message || "")) return r;
+    hasCompanies = false;
+  }
+  return build(PROFILE_COLS);
+}
+
 async function fetchProfile(client, userId) {
-  const { data, error } = await client
-    .from("profiles").select("id,email,full_name,approved,is_admin,apps,app_roles,rank,app_perms,direktor_id,created_at")
-    .eq("id", userId).maybeSingle();
+  const { data, error } = await selectProfiles(cols => client.from("profiles").select(cols).eq("id", userId).maybeSingle());
   if (error) throw new AuthError("profile_error", "Could not load your account. Please try again.");
   return data;
 }
@@ -93,10 +103,10 @@ function friendly(error) {
 const now = Date.now(), day = 86400000;
 const preview = {
   users: [
-    { id: "p1", email: "admin@example.com", full_name: "Admin Example", approved: true, is_admin: true, apps: ["calculator", "app2"], app_roles: { calculator: "admin", app2: "admin" }, app_perms: {}, direktor_id: null, created_at: new Date(now - 30 * day).toISOString() },
-    { id: "p4", email: "direktor@example.com", full_name: "Direktor Example", approved: true, is_admin: false, apps: ["calculator", "app2", "crm"], app_roles: { calculator: "direktor", app2: "direktor", crm: "direktor" }, app_perms: {}, direktor_id: null, created_at: new Date(now - 20 * day).toISOString() },
+    { id: "p1", email: "admin@example.com", full_name: "Admin Example", companies: ["tadex", "strong"], approved: true, is_admin: true, apps: ["calculator", "app2"], app_roles: { calculator: "admin", app2: "admin" }, app_perms: {}, direktor_id: null, created_at: new Date(now - 30 * day).toISOString() },
+    { id: "p4", email: "direktor@example.com", full_name: "Direktor Example", companies: ["tadex", "strong"], approved: true, is_admin: false, apps: ["calculator", "app2", "crm"], app_roles: { calculator: "direktor", app2: "direktor", crm: "direktor" }, app_perms: {}, direktor_id: null, created_at: new Date(now - 20 * day).toISOString() },
     { id: "p2", email: "magda@example.com", full_name: "Magda Example", approved: true, is_admin: false, apps: ["calculator"], app_roles: { calculator: "operator" }, app_perms: {}, direktor_id: "p4", created_at: new Date(now - 12 * day).toISOString() },
-    { id: "p3", email: "new.colleague@example.com", full_name: "New Colleague", approved: false, is_admin: false, apps: [], app_roles: {}, app_perms: {}, direktor_id: null, created_at: new Date(now - 1 * day).toISOString() },
+    { id: "p3", email: "new.colleague@example.com", full_name: "New Colleague", companies: ["strong"], approved: false, is_admin: false, apps: [], app_roles: {}, app_perms: {}, direktor_id: null, created_at: new Date(now - 1 * day).toISOString() },
   ],
 };
 function previewSession() {
@@ -241,11 +251,9 @@ export async function listPresence() {
 
 // ---------- Admin (RLS allows these only for profiles.is_admin = true) ----------
 export async function listUsers() {
-  if (previewMode) return preview.users.map(u => ({ ...u, apps: [...u.apps], app_roles: { ...u.app_roles } }));
+  if (previewMode) return preview.users.map(u => ({ ...u, apps: [...u.apps], app_roles: { ...u.app_roles }, companies: [...(u.companies || ["tadex"])] }));
   const client = await sb();
-  const { data, error } = await client
-    .from("profiles").select("id,email,full_name,approved,is_admin,apps,app_roles,rank,app_perms,direktor_id,created_at")
-    .order("created_at", { ascending: false });
+  const { data, error } = await selectProfiles(cols => client.from("profiles").select(cols).order("created_at", { ascending: false }));
   if (error) throw new AuthError("admin_error", "Could not load users.");
   return data;
 }
@@ -266,6 +274,10 @@ export async function updateUser(id, changes) {
   if ("rank" in changes) patch.rank = String(changes.rank || "").trim().slice(0, 60);
   if ("app_perms" in changes) patch.app_perms = withOpenKurs(changes.app_perms);
   if ("direktor_id" in changes) patch.direktor_id = changes.direktor_id || null;
+  if ("companies" in changes) {
+    if (!hasCompanies && !previewMode) throw new AuthError("admin_error", "Firme (Tadex / Strong) još nisu uključene u bazi.");
+    patch.companies = changes.companies;
+  }
   if (previewMode) {
     const u = preview.users.find(x => x.id === id);
     if (u) Object.assign(u, patch);

@@ -394,6 +394,28 @@ body[data-lang="en"] .thought-en{display:block;margin-top:4px;color:var(--v4-nav
 .fb-send{background:#e92264;color:#fff;text-decoration:none;font-weight:700;border-radius:10px;padding:11px 18px}
 .fb-send:hover{background:#d01a57}
 
+/* TADEX / STRONG switch */
+.apps-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.apps-head h2{margin:0}
+.company-switch{display:inline-flex;padding:4px;border-radius:999px;background:#fff;border:1px solid var(--v4-line,#dbe5ef);gap:4px}
+.company-switch[hidden]{display:none}
+.cs-btn{border:0;background:transparent;font:inherit;font-weight:800;letter-spacing:.08em;font-size:.82rem;padding:8px 20px;border-radius:999px;color:var(--muted);cursor:pointer}
+.cs-btn:hover{color:var(--navy)}
+.cs-btn[aria-selected="true"].cs-tadex{background:var(--v4-blue,#1a4b86);color:#fff}
+.cs-btn[aria-selected="true"].cs-strong{background:#e07b00;color:#fff}
+/* Strong tiles: orange accent */
+.tile.strong .tile-ic{background:#fff3e0}
+.tile.strong .tile-ic svg{stroke:#e07b00}
+.tile.strong:hover{border-color:#e07b00;box-shadow:0 12px 26px rgba(224,123,0,.14)}
+.tile.strong:not(.placeholder) .tile-label{color:#b86200}
+.tile.placeholder.strong{background:#fff;border:1px dashed #f0c48a;align-items:flex-start;justify-content:flex-start;text-align:left;cursor:default}
+.tile.placeholder.strong:hover{transform:none;background:#fff;box-shadow:none;border-color:#f0c48a}
+.tile.placeholder.strong:hover .tile-ic{transform:none;background:#fff3e0}
+.tile.placeholder.strong .tile-ic{margin-bottom:auto}
+.tile.placeholder.strong .tile-title{margin-top:18px;color:var(--navy)}
+.tile-badge{position:absolute;top:16px;right:16px;font-size:.7rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#b86200;background:#fff3e0;border-radius:999px;padding:4px 10px}
+.checks.firms label{display:flex;align-items:center;gap:6px;font-weight:700;font-size:.85rem;white-space:nowrap}
+body:not([data-company="tadex"]) #team-kurs,body[data-company-locked="1"] #team-kurs{display:none!important}
 /* Admin users: one card per person on every screen size — everything fits, no sideways scrolling. */
 .users thead{display:none}
 .users,.users tbody{display:block;width:100%}
@@ -415,3 +437,30 @@ body[data-lang="en"] .thought-en{display:block;margin-top:4px;color:var(--v4-nav
 @media (max-width:600px){.users tr[data-id]{grid-template-columns:1fr 1fr}.users tr[data-id] td.who{grid-column:1/-1;grid-row:auto}}
 .users tr[data-id] td[data-k="Apps"]{order:9}
 body[data-state="admin"] .wrap{max-width:1600px}
+
+/* RUYI side: bronze accent (from the RUYI products mockup) */
+.cs-btn[aria-selected="true"].cs-ruyi{background:#8C5238;color:#fff}
+.tile.ruyi .tile-ic{background:#f6ece5}
+.tile.ruyi .tile-ic svg{stroke:#8C5238}
+.tile.ruyi:hover{border-color:#8C5238;box-shadow:0 12px 26px rgba(140,82,56,.14)}
+.tile.ruyi:not(.placeholder) .tile-label{color:#8C5238}
+.tile.placeholder.ruyi{background:#fff;border:1px dashed #dcbfae;align-items:flex-start;justify-content:flex-start;text-align:left;cursor:default}
+.tile.placeholder.ruyi:hover{transform:none;background:#fff;box-shadow:none;border-color:#dcbfae}
+.tile.placeholder.ruyi:hover .tile-ic{transform:none;background:#f6ece5}
+.tile.placeholder.ruyi .tile-ic{margin-bottom:auto}
+.tile.placeholder.ruyi .tile-title{margin-top:18px;color:var(--navy)}
+.tile.ruyi .tile-badge{color:#8C5238;background:#f6ece5}
+
+/* Locked sides: everyone sees every company; no access = grey with a lock, never a link */
+.lock-ic{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:6px}
+.cs-btn.locked{color:#9aa6b2}
+.cs-btn.locked[aria-selected="true"]{background:#e9edf2!important;color:#5f6b78!important}
+.tile.locked{position:relative;background:#f4f6f8!important;border:1px solid #e1e6ec!important;box-shadow:none!important;cursor:not-allowed;align-items:flex-start;justify-content:flex-start;text-align:left;filter:grayscale(1);opacity:.75}
+.tile.locked:hover{transform:none!important}
+.tile.locked .tile-ic{background:#e9edf2!important;margin-bottom:auto}
+.tile.locked .tile-ic svg{stroke:#8a96a3!important}
+.tile.locked .tile-title{margin-top:18px;color:#5f6b78}
+.tile.locked .tile-label{color:#8a96a3!important}
+.tile-lock{position:absolute;top:16px;right:16px;color:#8a96a3}
+.tile-lock .lock-ic{width:18px;height:18px;margin:0}
+.locked-note{grid-column:1/-1;margin:0 0 4px;padding:12px 16px;border-radius:12px;background:#f4f6f8;border:1px solid #e1e6ec;color:#5f6b78;font-weight:600}

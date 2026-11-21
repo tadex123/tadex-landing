@@ -1,5 +1,31 @@
-// Video vodič: one video of the whole TADEX Hub, with chapters. Signed-in hub members only.
-import { getSession, signOut, startHeartbeat } from "/auth.js";
+// Video vodič: the team video of the whole TADEX Hub, with chapters (signed-in hub members), plus a
+// "Vodič za direktora" for Direktors and Admins. The director video shows real client data, so it is
+// NOT a public file: it lives in the private Supabase Storage bucket "vodic-direktor" (read policy =
+// public.is_hub_direktor()) and is played through a short-lived signed URL.
+import { getSession, signOut, startHeartbeat, hubDb, previewMode } from "/auth.js";
+
+const DIREKTOR_BUCKET = "vodic-direktor";
+const DIREKTOR_FILE = "tadex-hub-vodic-direktor.mp4";
+const DIREKTOR_CHAPTERS = [
+  { at: 0, title: "Uvod – tvoj Hub", text: "Šta direktor vidi i prekidač TADEX / STRONG / RUYI." },
+  { at: 22.7, title: "Kalkulator", text: "Kurs, formula, artikli i carina po stavci." },
+  { at: 48.5, title: "Povijest kalkulacija", text: "Moj tim i Svi, pretraga, otvaranje u kalkulatoru." },
+  { at: 68.7, title: "CRM i predračun", text: "Svi klijenti, dodjela kolegi, način plaćanja, odobravanje predračuna." },
+  { at: 104.6, title: "Pošiljke i fascikla", text: "Status, kamion, slobodni dani i dokumenti." },
+  { at: 118.8, title: "Ture i Flota", text: "Troškovi vožnje i vozni park." },
+  { at: 128.8, title: "Plan: knjigovodstvo u Hubu", text: "Stvarni prihodi, troškovi i uplate po klijentu, pošiljci i mjesecu." },
+  { at: 148.4, title: "STRONG – u izradi", text: "Katalog, zalihe, predračun s PDV-om, garantni list." },
+  { at: 186.8, title: "RUYI maloprodaja – plan", text: "Kolegice dodaju proizvode, mi radimo marketing i shopove." },
+  { at: 217.8, title: "Kraj", text: "Gdje ponovo naći vodič." },
+];
+
+/** Admin, or Direktor in any hub app. */
+function isDirektor(profile) {
+  if (!profile) return false;
+  if (profile.is_admin) return true;
+  const roles = profile.app_roles && typeof profile.app_roles === "object" ? Object.values(profile.app_roles) : [];
+  return roles.includes("direktor");
+}
 
 const CHAPTERS = [
   { at: 0, title: "Prijava i jezik", text: "Prijava, zahtjev za račun, zaboravljena lozinka, promjena jezika." },
@@ -18,16 +44,45 @@ function goLogin() {
   location.replace("/?next=" + encodeURIComponent(location.pathname + location.search));
 }
 
-function render() {
+const VIDEOS = {
+  tim: {
+    eyebrow: "Za cijeli tim",
+    title: "Video vodič kroz TADEX Hub",
+    lead: "Jedan video, oko 7,5 minuta: od prijave do isporuke. Uključi zvuk. Klikni poglavlje da skočiš na taj dio.",
+    poster: "/vodic/video/poster.jpg",
+    chapters: CHAPTERS,
+    src: async () => "/vodic/video/tadex-hub-vodic.mp4?v=2",
+  },
+  direktor: {
+    eyebrow: "Samo za direktore",
+    title: "Vodič za direktora",
+    lead: "Oko 4 minute: šta direktor vidi i odobrava u Hubu, plan za knjigovodstvo, te STRONG i RUYI koji su u izradi. Video prikazuje prave podatke, zato ga vide samo direktori. Uključi zvuk.",
+    poster: "/vodic/video/poster-direktor.jpg",
+    chapters: DIREKTOR_CHAPTERS,
+    src: async () => {
+      const db = await hubDb();
+      const { data, error } = await db.storage.from(DIREKTOR_BUCKET).createSignedUrl(DIREKTOR_FILE, 4 * 3600);
+      if (error || !data) throw new Error("Video se nije učitao. Osvježi stranicu ili se ponovo prijavi.");
+      return data.signedUrl;
+    },
+  },
+};
+
+function render(kind, canDirektor) {
+  const v = VIDEOS[kind];
+  const CHAPTERS = v.chapters;
   app.innerHTML = `
+    ${canDirektor ? `<nav class="vtabs" aria-label="Izbor videa">
+      <a href="?v=tim" class="vtab${kind === "tim" ? " on" : ""}">Za cijeli tim</a>
+      <a href="?v=direktor" class="vtab${kind === "direktor" ? " on" : ""}">Vodič za direktora</a>
+    </nav>` : ""}
     <section class="intro">
-      <p class="eyebrow">Za cijeli tim</p>
-      <h1>Video vodič kroz TADEX Hub</h1>
-      <p class="lead">Jedan video, oko 7,5 minuta: od prijave do isporuke. Uključi zvuk. Klikni poglavlje da skočiš na taj dio.</p>
+      <p class="eyebrow">${v.eyebrow}</p>
+      <h1>${v.title}</h1>
+      <p class="lead">${v.lead}</p>
     </section>
     <section class="player">
-      <video id="video" controls preload="metadata" playsinline poster="/vodic/video/poster.jpg">
-        <source src="/vodic/video/tadex-hub-vodic.mp4?v=2" type="video/mp4">
+      <video id="video" controls preload="metadata" playsinline poster="${v.poster}">
         Tvoj preglednik ne može prikazati video.
       </video>
       <p class="now" id="now">${CHAPTERS[0].title}</p>
@@ -44,6 +99,13 @@ function render() {
       </ol>
     </section>`;
   const video = document.querySelector("#video");
+  v.src().then((url) => {
+    const source = document.createElement("source");
+    source.src = url;
+    source.type = "video/mp4";
+    video.appendChild(source);
+    video.load();
+  }).catch((err) => { document.querySelector("#now").textContent = err.message; });
   const now = document.querySelector("#now");
   const buttons = [...document.querySelectorAll(".chapter")];
   const current = () => {
@@ -81,7 +143,9 @@ async function boot() {
   const who = document.querySelector("#who");
   if (who) who.textContent = session.profile.full_name || session.user.email;
   document.querySelector("#signout")?.addEventListener("click", async () => { await signOut(); location.href = "/"; });
-  render();
+  const canDirektor = isDirektor(session.profile) && !previewMode;
+  const wanted = new URLSearchParams(location.search).get("v");
+  render(wanted === "direktor" && canDirektor ? "direktor" : "tim", canDirektor);
 }
 
 boot();

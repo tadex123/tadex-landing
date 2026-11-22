@@ -6,6 +6,7 @@ import { getSession, signOut, startHeartbeat, hubDb, previewMode } from "/auth.j
 
 const DIREKTOR_BUCKET = "vodic-direktor";
 const DIREKTOR_FILE = "tadex-hub-vodic-direktor.mp4";
+const DIREKTOR_PDF = "Prirucnik-za-direktora.pdf";
 const DIREKTOR_CHAPTERS = [
   { at: 0, title: "Uvod – tvoj Hub", text: "Šta direktor vidi i prekidač TADEX / STRONG / RUYI." },
   { at: 22.7, title: "Kalkulator", text: "Kurs, formula, artikli i carina po stavci." },
@@ -65,6 +66,12 @@ const VIDEOS = {
       if (error || !data) throw new Error("Video se nije učitao. Osvježi stranicu ili se ponovo prijavi.");
       return data.signedUrl;
     },
+    pdf: async () => {
+      const db = await hubDb();
+      const { data, error } = await db.storage.from(DIREKTOR_BUCKET).createSignedUrl(DIREKTOR_PDF, 3600, { download: DIREKTOR_PDF });
+      if (error || !data) throw new Error("Priručnik se nije otvorio. Osvježi stranicu ili se ponovo prijavi.");
+      return data.signedUrl;
+    },
   },
 };
 
@@ -81,6 +88,10 @@ function render(kind, canDirektor) {
       <h1>${v.title}</h1>
       <p class="lead">${v.lead}</p>
     </section>
+    ${v.pdf ? `<section class="manual">
+      <div><p class="t">Priručnik za direktora (PDF)</p><p class="d">Sve funkcije korak po korak, sa slikama ekrana. 23 stranice. Samo za internu upotrebu.</p></div>
+      <button type="button" id="manual-dl" class="manual-btn">Preuzmi PDF</button>
+    </section>` : ""}
     <section class="player">
       <video id="video" controls preload="metadata" playsinline poster="${v.poster}">
         Tvoj preglednik ne može prikazati video.
@@ -99,6 +110,13 @@ function render(kind, canDirektor) {
       </ol>
     </section>`;
   const video = document.querySelector("#video");
+  document.querySelector("#manual-dl")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try { location.href = await v.pdf(); }
+    catch (err) { btn.textContent = err.message; }
+    finally { setTimeout(() => { btn.disabled = false; }, 1500); }
+  });
   v.src().then((url) => {
     const source = document.createElement("source");
     source.src = url;

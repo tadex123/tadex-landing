@@ -6,6 +6,9 @@ import { getSession, signOut, startHeartbeat, hubDb, previewMode } from "/auth.j
 
 const DIREKTOR_BUCKET = "vodic-direktor";
 const DIREKTOR_FILE = "tadex-hub-vodic-direktor.mp4";
+// Smaller copy (14 MB instead of 42 MB) for phones and narrow screens.
+const DIREKTOR_FILE_MOBILE = "tadex-hub-vodic-direktor-mobitel.mp4";
+const preferMobile = () => matchMedia("(max-width: 760px)").matches;
 const DIREKTOR_PDF = "Prirucnik-za-direktora.pdf";
 const DIREKTOR_CHAPTERS = [
   { at: 0, title: "Uvod – tvoj Hub", text: "Šta direktor vidi i prekidač TADEX / STRONG / RUYI." },
@@ -62,7 +65,7 @@ const VIDEOS = {
     chapters: DIREKTOR_CHAPTERS,
     src: async () => {
       const db = await hubDb();
-      const { data, error } = await db.storage.from(DIREKTOR_BUCKET).createSignedUrl(DIREKTOR_FILE, 4 * 3600);
+      const { data, error } = await db.storage.from(DIREKTOR_BUCKET).createSignedUrl(preferMobile() ? DIREKTOR_FILE_MOBILE : DIREKTOR_FILE, 4 * 3600);
       if (error || !data) throw new Error("Video se nije učitao. Osvježi stranicu ili se ponovo prijavi.");
       return data.signedUrl;
     },

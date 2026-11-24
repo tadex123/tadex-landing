@@ -521,12 +521,12 @@ function startCalendar() {
 }
 </script>
 <script type="module">
-const OWNER_EMAIL = "tadijasaric92@gmail.com";
+const OWNER_EMAILS = ["tadija@tadexchina.com", "tadijasaric92@gmail.com"];
 
 try {
   const { getSession } = await import("/auth.js");
   const session = await getSession();
-  if (!session || session.user.email !== OWNER_EMAIL) {
+  if (!session || !OWNER_EMAILS.includes((session.user.email || "").toLowerCase())) {
     location.replace("/");
   } else {
     startCalendar();

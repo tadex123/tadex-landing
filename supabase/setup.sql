@@ -66,7 +66,7 @@ grant execute on function public.is_admin() to authenticated;
 --    but only once that email address is CONFIRMED (so nobody can claim it by just signing up with it).
 create or replace function public.hub_owner_emails()
 returns text[] language sql immutable as $$
-  select array['tadijasaric92@gmail.com']::text[]
+  select array['tadija@tadexchina.com', 'tadijasaric92@gmail.com']::text[]
 $$;
 
 create or replace function public.handle_new_user()

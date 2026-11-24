@@ -341,7 +341,7 @@ function renderApps() {
   if (side !== "tadex") { renderSideApps(side); return; }
   const allowed = new Set(session.profile.apps || []);
   const isAdmin = !!session.profile.is_admin;
-  const isOwner = session.user.email === "tadijasaric92@gmail.com";
+  const isOwner = ["tadija@tadexchina.com", "tadijasaric92@gmail.com"].includes((session.user.email || "").toLowerCase());
   const visible = APPS.filter(a => a.public || (!a.adminOnly && hasAppAccess(a.id, allowed)) || ((a.adminDraft || a.adminOnly) && isAdmin));
   const grid = $("#apps-grid");
   const ownerTile = isOwner ? `

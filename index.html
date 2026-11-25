@@ -115,6 +115,7 @@
   <section class="panel apps-only" aria-labelledby="apps-title">
    <div class="apps-head">
     <h2 id="apps-title" data-i18n="apps">Apps</h2>
+    <a href="#" class="upd-open" id="upd-open" hidden>Šta je novo</a>
     <div class="company-switch" id="company-switch" role="tablist" aria-label="Firma" hidden></div>
    </div>
    <div class="apps" id="apps-grid"></div>
@@ -174,6 +175,13 @@
    <a class="fb-send" id="fb-send" href="mailto:tadija@tadexchina.com" target="_blank" rel="noopener" data-i18n="fb.send">Open in email</a>
   </div>
  </form>
+</dialog>
+<dialog class="fb-modal upd-modal" id="upd-modal" aria-labelledby="upd-title">
+ <div class="fb-form">
+  <div class="fb-head"><h2 id="upd-title">Novo u TADEX Hubu</h2><button type="button" class="fb-x" id="upd-close" aria-label="Zatvori">×</button></div>
+  <div class="upd-body" id="upd-body"></div>
+  <div class="fb-actions"><button type="button" class="fb-send" id="upd-ok">Pročitao sam</button></div>
+ </div>
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>

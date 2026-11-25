@@ -376,7 +376,7 @@ body[data-lang="en"] .thought-en{display:block;margin-top:4px;color:var(--v4-nav
 .fb-open{background:#1a4b86;color:#fff;border:0;border-radius:10px;padding:11px 18px;font:inherit;font-weight:700;cursor:pointer}
 .fb-open:hover{background:#0c163a}
 .foot-mail a{text-decoration:underline}
-.fb-modal{border:0;border-radius:18px;padding:0;width:min(560px,calc(100vw - 28px));box-shadow:0 30px 80px rgba(12,22,58,.35);color:#0c163a}
+.fb-modal{margin:auto;max-height:calc(100vh - 28px);border:0;border-radius:18px;padding:0;width:min(560px,calc(100vw - 28px));box-shadow:0 30px 80px rgba(12,22,58,.35);color:#0c163a}
 .fb-modal::backdrop{background:rgba(12,22,58,.55)}
 .fb-form{padding:22px 24px;display:flex;flex-direction:column;gap:14px}
 .fb-head{display:flex;align-items:center;justify-content:space-between}
@@ -467,3 +467,16 @@ body[data-state="admin"] .wrap{max-width:1600px}
 .tile-lock{position:absolute;top:16px;right:16px;color:#8a96a3}
 .tile-lock .lock-ic{width:18px;height:18px;margin:0}
 .locked-note{grid-column:1/-1;margin:0 0 4px;padding:12px 16px;border-radius:12px;background:#f4f6f8;border:1px solid #e1e6ec;color:#5f6b78;font-weight:600}
+
+/* "Šta je novo": update notes after sign-in */
+.upd-open{margin-left:auto;font-size:14px;font-weight:600;color:#0c163a;text-decoration:none;border:1px solid #d6deea;border-radius:999px;padding:6px 12px;background:#fff}
+.upd-open[hidden]{display:none!important}
+.upd-open:hover{border-color:#0c163a}
+.upd-open.has-new::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e92264;margin-left:7px;vertical-align:middle}
+.upd-modal{width:min(620px,calc(100vw - 28px))}
+.upd-body{max-height:min(60vh,520px);overflow:auto;display:flex;flex-direction:column;gap:16px}
+.upd-item{border-left:3px solid #e92264;padding-left:12px}
+.upd-item h3{font-size:17px;margin:2px 0 6px}
+.upd-item ul{margin:0;padding-left:18px;color:#33425e;font-size:15px;line-height:1.45}
+.upd-item li+li{margin-top:4px}
+.upd-date{font-size:12px;color:#6b7a93;margin:0}

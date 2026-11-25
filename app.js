@@ -1,6 +1,7 @@
 // TADEX Hub UI. Renders the signed-out form, the apps grid and the admin panel.
 import * as auth from "./auth.js";
 import * as i18n from "./i18n.js";
+import { setupUpdates } from "./updates.js";
 const { t } = i18n;
 
 // Off on tadexhub.com (Coming soon) until a later China-only unlock. Other hosts keep the live tile.
@@ -67,13 +68,15 @@ function applyCompanyHero(id) {
 const LOCK_SVG = '<svg class="lock-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 // Strong apps: in preparation. Tiles show "U pripremi" and do not open until each app is finished.
 const STRONG_APPS = [
+  { id: "s-katalog", title: "Katalog i cijene", note: "Modeli, konfiguracije, cijene i stanje po modelu", href: "/kalkulator/strong/katalog",
+    icon: '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/><path d="M6.5 8h2.5M6.5 11h2.5M15.5 8h2M15.5 11h2"/>' },
   { id: "s-crm", title: "Kupci · CRM", note: "Upiti, ponude, kapare, isporuke", href: "/kalkulator/strong/crm",
     icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M15.5 5.3a3 3 0 0 1 0 5.4M17.5 14.8c1.7.6 2.7 2.2 3 4.7"/>' },
-  { id: "s-predracun", title: "Predračun", note: "Bageri i paletari, Strong izgled",
+  { id: "s-predracun", title: "Predračun", note: "Pravi se u CRM-u, na poslu kupca · stavke iz kataloga", href: "/kalkulator/strong/crm",
     icon: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15.5h5M10 8.5h2"/>' },
   { id: "s-garancija", title: "Garancija i servis", note: "Serijski broj, kupac, servisni nalozi", href: "/kalkulator/strong/garancija",
     icon: '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>' },
-  { id: "s-skladiste", title: "Skladište", note: "Stanje po modelu, roba u dolasku",
+  { id: "s-skladiste", title: "Skladište", note: "Stanje po modelu, roba u dolasku", href: "/kalkulator/strong/zalihe",
     icon: '<path d="M3 9l9-5 9 5v11H3z"/><path d="M8 20v-6h8v6"/><path d="M8 17h8"/>' },
   { id: "s-posiljke", title: "Pošiljke", note: "Kontejneri iz Kine i dokumenti",
     icon: '<path d="M3 7h18v10H3z"/><path d="M3 11h18"/><path d="M7 7V5h4v2"/>' },
@@ -612,7 +615,10 @@ function toast(text, bad) {
 function route() {
   if (!session) return setState("out");
   if (location.hash === "#admin" && session.profile.is_admin) { setState("admin"); renderAdmin(); }
-  else { setState("apps"); renderApps(); renderTeamKurs(); renderVodicNotice(); }
+  else {
+    setState("apps"); renderApps(); renderTeamKurs(); renderVodicNotice();
+    setupUpdates({ userId: session.user.id, companies: companiesOf(session.profile) });
+  }
 }
 
 /** "Write to us": a small window that composes an email to tadija@tadexchina.com. */

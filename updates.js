@@ -5,6 +5,15 @@
 
 export const HUB_UPDATES = [
   {
+    id: "2026-11-26d", date: "26. 11. 2026.", companies: ["tadex"],
+    title: "CRM: manje duplih upita i pogrešnih predračuna",
+    items: [
+      "„Spremi kalkulaciju” više ne kači kalkulaciju na tuđi predračun. Nova verzija ide samo na predračun te kalkulacije ili na onaj s istim Brojem.",
+      "Kad u „Napravi nacrt” izabereš „+ Novi upit” za klijenta koji već ima otvoren upit, Hub te upozori. Ako je ista narudžba, klikni „Nova verzija na …” i novi Broj (npr. T-086/26) prelazi na postojeći upit. Za drugu narudžbu označi „Ovo je druga, nova narudžba”.",
+      "Fajl čije ime kaže šta je (npr. „Packing list.pdf”, „Quotation…”, „…Proforma Invoice”) sam ide pod tu vrstu, i kad je u izboru ostalo nešto drugo.",
+    ],
+  },
+  {
     id: "2026-11-26a", date: "26. 11. 2026.", companies: ["tadex", "strong"],
     title: "CRM: nova faza „Odustao” s razlogom",
     items: [

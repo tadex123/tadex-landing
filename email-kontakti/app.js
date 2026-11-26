@@ -44,7 +44,7 @@ function fieldControl(field) {
   const hint = field.hint ? `<p class="hint">${esc(field.hint)}</p>` : "";
   const placeholder = field.placeholder ? ` placeholder="${esc(field.placeholder)}"` : "";
   if (field.type === "textarea") {
-    return `<label class="field wide"><span>${esc(field.label)}</span><textarea name="${esc(field.key)}" rows="4" maxlength="${field.max}" autocomplete="off"></textarea>${hint}</label>`;
+    return `<label class="field wide"><span>${esc(field.label)}</span><textarea name="${esc(field.key)}" rows="${field.rows || 4}" maxlength="${field.max}" autocomplete="off"></textarea>${hint}</label>`;
   }
   if (field.type === "status") {
     const options = model.STATUSES.map(item => `<option value="${esc(item.value)}">${esc(item.label)}</option>`).join("");
@@ -153,8 +153,19 @@ async function countsFor(brand) {
   return Object.fromEntries(pairs);
 }
 
+/** Baze the signed-in person may open (set at boot from the hub profile). */
+let allowed = ["tadex", "strong"];
+
+function renderNoAccess(route) {
+  app.innerHTML = `
+    ${crumbs({})}
+    <h1>Nemate pristup ovoj bazi</h1>
+    <p class="lead">${esc(model.brandTitle(route.brand))} je samo za tim te firme. Ako vam treba, javite se adminu.</p>
+    <p><a class="btn" href="${esc(model.hrefFor())}">Nazad</a></p>`;
+}
+
 function renderBrands() {
-  const cards = model.brandChoices().map(choice => `
+  const cards = model.brandChoices(allowed).map(choice => `
     <a class="choice ${esc(choice.id)}" href="${esc(choice.href)}">
       <span class="kicker">${esc(choice.id === "strong" ? "Strong" : "Tadex")}</span>
       <strong>${esc(choice.title)}</strong>
@@ -277,7 +288,9 @@ function renderForm(route, row) {
 
 function renderView(route, row) {
   const blocks = model.fieldGroups().map(group => {
-    const rows = group.fields.map(field => `<dt>${esc(field.label)}</dt><dd>${esc(showValue(field, row))}</dd>`).join("");
+    const rows = group.fields.map(field => field.type === "textarea"
+      ? `<dt>${esc(field.label)}</dt><dd class="pre"${field.key === "last_email_body" ? ' data-testid="email-body"' : ""}>${esc(showValue(field, row))}</dd>`
+      : `<dt>${esc(field.label)}</dt><dd>${esc(showValue(field, row))}</dd>`).join("");
     const emptySend = group.group === "send" && model.activitySummary(row).length === 0
       ? `<p class="hint">${esc(model.EMPTY_SEND)}</p>` : "";
     const title = group.group === "send" ? "<h2>Zadnji poslani email</h2>" : "";
@@ -309,7 +322,13 @@ async function render() {
   document.body.dataset.brand = route.brand || "";
   document.title = `${model.documentTitle(route)} · TADEX Hub`;
   try {
-    if (route.screen === "brands") { renderBrands(); return; }
+    if (route.screen === "brands") {
+      // Only one baza for this person: open it straight away.
+      if (allowed.length === 1) { location.replace(model.hrefFor({ brand: allowed[0] })); return; }
+      renderBrands();
+      return;
+    }
+    if (!allowed.includes(route.brand)) { renderNoAccess(route); return; }
     if (route.screen === "countries") { await renderCountries(route); return; }
     if (route.mode === "create") { renderForm(route, null); return; }
     if (route.mode === "view" || route.mode === "edit") {
@@ -336,6 +355,7 @@ async function boot() {
   }
   if (!session) { goLogin(); return; }
   startHeartbeat("hub");
+  allowed = model.allowedBrands(session.profile);
   const who = document.querySelector("#who");
   if (who) who.textContent = session.profile.full_name || session.user.email;
   const out = document.querySelector("#signout");

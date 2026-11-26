@@ -53,6 +53,7 @@ alter table public.email_contacts add column if not exists what_they_buy text;
 alter table public.email_contacts add column if not exists owner_name text;
 alter table public.email_contacts add column if not exists last_email_on date;
 alter table public.email_contacts add column if not exists last_email_subject text;
+alter table public.email_contacts add column if not exists last_email_body text;
 alter table public.email_contacts add column if not exists from_address text;
 alter table public.email_contacts add column if not exists sent_by text;
 alter table public.email_contacts add column if not exists status text;
@@ -93,6 +94,7 @@ alter table public.email_contacts add constraint email_contacts_lengths check (
   and (what_they_buy is null or char_length(what_they_buy) <= 500)
   and (owner_name is null or char_length(owner_name) <= 80)
   and (last_email_subject is null or char_length(last_email_subject) <= 300)
+  and (last_email_body is null or char_length(last_email_body) <= 20000)
   and (from_address is null or char_length(from_address) <= 320)
   and (sent_by is null or char_length(sent_by) <= 80)
   and (deal_ref is null or char_length(deal_ref) <= 120)

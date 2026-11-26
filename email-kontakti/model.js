@@ -45,6 +45,7 @@ export const FIELD_DEFS = [
   { key: "owner_name", label: "Odgovorna osoba", max: 80, suggestions: ["Aida", "Magdalena", "Mladen"] },
   { key: "last_email_on", label: "Datum", type: "date", group: "send" },
   { key: "last_email_subject", label: "Naslov", max: 300, group: "send" },
+  { key: "last_email_body", label: "Tekst poslanog maila", max: 20000, type: "textarea", rows: 10, group: "send", wide: true, hint: "Zalijepite tekst maila koji je poslan kupcu, da i kolege vide šta je napisano." },
   { key: "from_address", label: "Email s kojega je poslano", max: 320, group: "send", wide: true },
   { key: "status", label: "Status", type: "status" },
   { key: "next_follow_up", label: "Sljedeći follow-up", type: "date" },
@@ -120,7 +121,7 @@ export function buildWrite(form, brand, country) {
     if (text.length > field.max) return { ok: false, message: `Polje "${field.label}" je predugo.` };
     row[field.key] = text || null;
   }
-  const recordedSend = row.last_email_on != null || row.last_email_subject != null;
+  const recordedSend = row.last_email_on != null || row.last_email_subject != null || row.last_email_body != null;
   if (recordedSend && row.from_address == null) {
     return { ok: false, message: SEND_NEEDS_FROM };
   }
@@ -200,6 +201,14 @@ export function searchContacts(rows, query) {
   });
 }
 
+/** Baze this person may open: admins both, others only their hub sides (profiles.companies). */
+export function allowedBrands(profile) {
+  if (!profile) return [];
+  if (profile.is_admin) return ["tadex", "strong"];
+  const mine = Array.isArray(profile.companies) ? profile.companies : ["tadex"];
+  return ["tadex", "strong"].filter(id => mine.includes(id));
+}
+
 export function parseRoute(search) {
   const params = new URLSearchParams(String(search || "").replace(/^\?/, ""));
   const brandRaw = params.get("baza");
@@ -236,8 +245,8 @@ export function hrefFor(route = {}) {
   return "/email-kontakti/" + (query ? `?${query}` : "");
 }
 
-export function brandChoices() {
-  return ["tadex", "strong"].map(id => ({
+export function brandChoices(allowed = ["tadex", "strong"]) {
+  return ["tadex", "strong"].filter(id => allowed.includes(id)).map(id => ({
     id,
     title: BRANDS[id].title,
     text: BRANDS[id].text,

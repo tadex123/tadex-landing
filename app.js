@@ -14,7 +14,8 @@ const APPS = [
   { id: "crm", title: "CRM", label: "Otvori", href: "/kalkulator/crm",
     icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M15.5 5.3a3 3 0 0 1 0 5.4M17.5 14.8c1.7.6 2.7 2.2 3 4.7"/>' },
   // Email kontakti: every approved hub member. Not an Admin checkbox, and not the Ponude/China gate.
-  { id: "email-kontakti", title: "Email kontakti", label: "Otvori", href: "/email-kontakti/", everyone: true,
+  // TADEX side opens the Tadex baza; the Strong baza has its own tile on the STRONG side.
+  { id: "email-kontakti", title: "Email kontakti", label: "Otvori", href: "/email-kontakti/?baza=tadex", everyone: true,
     icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/>' },
   // Video vodič: one video through the whole hub, for every signed-in member.
   { id: "vodic", title: "Video vodič", label: "Otvori", href: "/vodic/", everyone: true,
@@ -78,6 +79,8 @@ const STRONG_APPS = [
     icon: '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>' },
   { id: "s-skladiste", title: "Skladište", note: "Stanje po modelu, roba u dolasku", href: "/kalkulator/strong/zalihe",
     icon: '<path d="M3 9l9-5 9 5v11H3z"/><path d="M8 20v-6h8v6"/><path d="M8 17h8"/>' },
+  { id: "s-email", title: "Email kontakti", note: "Strong baza · kupci mehanizacije, poslani mailovi", href: "/email-kontakti/?baza=strong",
+    icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/>' },
   { id: "s-posiljke", title: "Pošiljke", note: "Kontejneri iz Kine i dokumenti",
     icon: '<path d="M3 7h18v10H3z"/><path d="M3 11h18"/><path d="M7 7V5h4v2"/>' },
 ];

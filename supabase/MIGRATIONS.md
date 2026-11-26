@@ -13,6 +13,7 @@ There is no `supabase/migrations/` runner and no CI gate. We keep idempotent `.s
 | `quotes-storage.sql` | Storage bucket `quotes` + policies (Ponude photos) |
 | `direktor-team-kurs.sql` | EUR/USD kurs open for every member: `editRates` + `seeRates` forced true (clears Deny) |
 | `email-kontakti.sql` | `email_contacts` table for the Email kontakti tile (same SQL inlined at the bottom of `setup.sql`). A recorded send requires `from_address` only. `sent_by` is kept and not required. Run in the SQL Editor on a fresh database. This file does not update existing rows. |
+| `email-kontakti-tijelo-i-brend.sql` | Forward change (26.11.2026). Adds `last_email_body` (text of the last sent email, max 20000) and limits each baza to people with that hub side: RLS uses `hub_email_contacts_brand_allowed(brand)` (approved and admin or brand in `profiles.companies`). A recorded send (date, subject or text) needs `from_address`. Idempotent. Apply before deploying the hub that reads `last_email_body`. |
 | `email-kontakti-send-from-only.sql` | Forward change for a database that already has `email_contacts`. Relaxes `email_contacts_send_record` so a recorded send needs `from_address` only. Does not drop `sent_by` and does not rewrite existing rows. Includes the table GRANTs. Run in the SQL Editor. Not applied from the app. |
 | `_template_new_table.sql` | Copy this for every **new** public table |
 
@@ -61,7 +62,7 @@ Do **not** blanket-GRANT all existing tables unless Tadija asks — this rule is
 | `profiles` | none (revoked) | `SELECT`; `UPDATE (approved, apps, app_roles, rank, app_perms, direktor_id)` | RLS: read own or admin; update admin-only |
 | `hub_presence` | none (revoked) | `SELECT` | RLS: admin read; writes only via `hub_heartbeat` / `hub_presence_signed_out` |
 
-`email_contacts` revokes `anon` and grants `authenticated` `SELECT`, `INSERT`, and `UPDATE` only (no `DELETE`). RLS: any approved hub member, both Tadex and Strong. A recorded send (date or subject) must store `from_address`. `sent_by` stays on the table for existing values and is not required. A database created from an older copy of `email-kontakti.sql` still has the stricter check (`from_address` and `sent_by`) until someone runs `email-kontakti-send-from-only.sql` in the SQL Editor. Do not apply that file from the app.
+`email_contacts` revokes `anon` and grants `authenticated` `SELECT`, `INSERT`, and `UPDATE` only (no `DELETE`). RLS: since `email-kontakti-tijelo-i-brend.sql`, an approved member sees only the baza of their hub side (`profiles.companies`); admins see both. A recorded send (date or subject) must store `from_address`. `sent_by` stays on the table for existing values and is not required. A database created from an older copy of `email-kontakti.sql` still has the stricter check (`from_address` and `sent_by`) until someone runs `email-kontakti-send-from-only.sql` in the SQL Editor. Do not apply that file from the app.
 
 `service_role` was never granted explicitly in our SQL (pre–30 Oct defaults covered it). New tables that a server must touch with the service key need an explicit `grant … to service_role`.
 

@@ -5,6 +5,31 @@
 
 export const HUB_UPDATES = [
   {
+    id: "2026-11-26a", date: "26. 11. 2026.", companies: ["tadex", "strong"],
+    title: "CRM: nova faza „Odustao” s razlogom",
+    items: [
+      "Kad klijent odustane, izaberi status „Odustao”. Spremiti se može tek kad izabereš razlog (npr. cijena previsoka, kupio kod drugog), a detalje možeš dopisati.",
+      "Razlog se vidi na predmetu i na kartici u Pipelineu. Odustali upiti se ne broje kao aktivni i ne traže follow-up.",
+    ],
+  },
+  {
+    id: "2026-11-26b", date: "26. 11. 2026.", companies: ["tadex"],
+    title: "Kalkulator: zbirni transport ili puni kontejner",
+    items: [
+      "U kalkulatoru je novi dio „Način prijevoza”: Zbirni transport ili Puni kontejner (20', 40' ili 40' HC).",
+      "Kod punog kontejnera upiši CBM i težinu, pa kalkulator pokaže koliko je kontejner pun i upozori ako roba ne stane.",
+      "Izbor se sprema uz kalkulaciju u Povijesti.",
+    ],
+  },
+  {
+    id: "2026-11-26c", date: "26. 11. 2026.",
+    title: "Email kontakti: tekst poslanog maila i odvojene baze",
+    items: [
+      "Uz zadnji poslani email sada možeš zalijepiti i tekst maila, pa kolege vide šta je kupcu napisano.",
+      "Tadex baza je na TADEX strani, a Strong baza ima svoju pločicu na STRONG strani. Svako vidi samo bazu svoje firme.",
+    ],
+  },
+  {
     id: "2026-11-25a", date: "25. 11. 2026.", companies: ["strong"],
     title: "STRONG: Katalog i cijene je sada posebna aplikacija",
     items: [

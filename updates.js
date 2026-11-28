@@ -5,6 +5,15 @@
 
 export const HUB_UPDATES = [
   {
+    id: "2026-11-28a", date: "28. 11. 2026.",
+    title: "Novo: Kalendar praznika i rokova",
+    items: [
+      "Nova pločica „Kalendar”: praznici BiH, Hrvatske i Kine, sajmovi i rokovi za narudžbe (npr. prije kineske Nove godine).",
+      "Vjerski praznici (katolički, pravoslavni, islamski) prikazani su blago, da ih imamo na umu pri planiranju rokova i sastanaka.",
+      "Slojeve biraš sam (npr. uključi Hrvatsku). Na početnoj vidiš šta je uskoro, a povremeno i kratku vijest za posao.",
+    ],
+  },
+  {
     id: "2026-11-26d", date: "26. 11. 2026.", companies: ["tadex"],
     title: "CRM: manje duplih upita i pogrešnih predračuna",
     items: [

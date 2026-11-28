@@ -2,6 +2,7 @@
 import * as auth from "./auth.js";
 import * as i18n from "./i18n.js";
 import { setupUpdates } from "./updates.js";
+import { renderBiz } from "./home-biz.js";
 const { t } = i18n;
 
 // Off on tadexhub.com (Coming soon) until a later China-only unlock. Other hosts keep the live tile.
@@ -17,6 +18,9 @@ const APPS = [
   // TADEX side opens the Tadex baza; the Strong baza has its own tile on the STRONG side.
   { id: "email-kontakti", title: "Email kontakti", label: "Otvori", href: "/email-kontakti/?baza=tadex", everyone: true,
     icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/>' },
+  // Kalendar praznika i rokova (BiH, HR, Kina, svijet, vjerski): every signed-in member. Data in praznici/data.js.
+  { id: "praznici", title: "Kalendar", label: "Otvori", href: "/praznici/", everyone: true,
+    icon: '<rect x="3" y="4.5" width="18" height="17" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01"/>' },
   // Video vodič: one video through the whole hub, for every signed-in member.
   { id: "vodic", title: "Video vodič", label: "Otvori", href: "/vodic/", everyone: true,
     icon: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M10 9.5v5l4.5-2.5z"/>' },
@@ -81,6 +85,8 @@ const STRONG_APPS = [
     icon: '<path d="M3 9l9-5 9 5v11H3z"/><path d="M8 20v-6h8v6"/><path d="M8 17h8"/>' },
   { id: "s-email", title: "Email kontakti", note: "Strong baza · kupci mehanizacije, poslani mailovi", href: "/email-kontakti/?baza=strong",
     icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/>' },
+  { id: "s-praznici", title: "Kalendar", note: "Praznici BiH, Kine i svijeta, rokovi za narudžbe", href: "/praznici/",
+    icon: '<rect x="3" y="4.5" width="18" height="17" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01"/>' },
   { id: "s-posiljke", title: "Pošiljke", note: "Kontejneri iz Kine i dokumenti",
     icon: '<path d="M3 7h18v10H3z"/><path d="M3 11h18"/><path d="M7 7V5h4v2"/>' },
 ];
@@ -621,6 +627,7 @@ function route() {
   else {
     setState("apps"); renderApps(); renderTeamKurs(); renderVodicNotice();
     setupUpdates({ userId: session.user.id, companies: companiesOf(session.profile) });
+    renderBiz({ companies: companiesOf(session.profile) });
   }
 }
 

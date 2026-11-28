@@ -1,0 +1,64 @@
+/* Kalendar praznika · TADEX Hub. Hub palette (light only, like the rest of the hub). */
+:root{color-scheme:only light;
+  --navy:#0F2A44;--muted:#4A6178;--line:#D6ECF8;--soft:#E8F6FD;--blue:#4FB3E8;--blue-d:#1E78B8;--deep:#0E4C80;--bg:#F6FAFD;--card:#fff;
+  --ba:#1E78B8;--ba-bg:#E3F1FB;--hr:#3557B0;--hr-bg:#E6ECFA;--cn:#C2362B;--cn-bg:#FBE9E7;--global:#23866A;--global-bg:#E2F3EC;--faith:#7D6EA0;--faith-bg:#F3F0F8;
+  --warn:#9A5B00;--warn-bg:#FFF4E0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--navy);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
+.top{display:flex;align-items:center;gap:14px;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.home{font-weight:800;color:var(--blue-d);text-decoration:none}
+.product{font-weight:700}
+.who{margin-left:auto;font-size:13px;color:var(--muted)}
+.wrap{max-width:1180px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-right,0px)) 60px max(16px,env(safe-area-inset-left,0px));display:grid;gap:18px}
+h1{font-size:clamp(22px,3vw,28px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:18px;font-weight:800}
+.muted{color:var(--muted)}
+.lede{color:var(--muted);max-width:72ch;font-size:14px}
+.layers{display:flex;flex-wrap:wrap;gap:8px}
+.layer{font:inherit;font-size:13px;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:6px 13px;background:var(--card);color:var(--navy);cursor:pointer}
+.layer[aria-pressed="false"]{opacity:.5}
+.layer .dot{width:10px;height:10px;border-radius:50%}
+.layer[aria-pressed="false"] .dot{background:transparent!important;border:1.5px solid var(--muted)}
+.dot-ba{background:var(--ba)}.dot-hr{background:var(--hr)}.dot-cn{background:var(--cn)}.dot-global{background:var(--global)}
+.dot-faith{border:2px dotted var(--faith)}
+.layer:focus-visible,.navbtn:focus-visible,.today-btn:focus-visible{outline:2px solid var(--blue-d);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:12px;min-width:0}
+.monthbar{display:flex;align-items:center;gap:8px}
+.monthbar h2{flex:1;text-align:center}
+.navbtn{font:inherit;font-size:18px;border:1px solid var(--line);background:var(--card);color:var(--navy);border-radius:9px;width:36px;height:36px;cursor:pointer}
+.navbtn:disabled{opacity:.35;cursor:default}
+.today-btn{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--blue-d);border-radius:9px;padding:7px 12px;cursor:pointer}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.dow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;padding:3px 0}
+.cell{min-height:84px;border:1px solid var(--line);border-radius:8px;padding:5px;display:flex;flex-direction:column;gap:3px;background:var(--card);min-width:0}
+.cell.empty{border:0;background:none}
+.cell.weekend{background:#F9FCFE}
+.cell.today{border:2px solid var(--blue-d)}
+.cell .n{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.cell.off .n{color:var(--cn)}
+.cell.off-ba .n{color:var(--ba)}
+.ev{font-size:10.5px;line-height:1.25;border-radius:4px;padding:2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev-ba{background:var(--ba-bg);color:var(--ba)}
+.ev-hr{background:var(--hr-bg);color:var(--hr)}
+.ev-cn{background:var(--cn-bg);color:var(--cn)}
+.ev-global{background:var(--global-bg);color:var(--global)}
+.ev.off{font-weight:700}
+.ev-faith{color:var(--faith);border:1px dotted var(--faith);font-style:italic}
+.ev.deadline{background:var(--warn-bg);color:var(--warn);font-weight:700}
+@media (max-width:560px){.cell{min-height:52px;padding:3px}.ev{font-size:0;height:6px;padding:0}.ev-faith{height:5px}}
+.list{list-style:none;display:grid;gap:10px}
+.list li{display:grid;grid-template-columns:52px 1fr;gap:10px;font-size:14px;align-items:start}
+.chip{font-variant-numeric:tabular-nums;font-weight:800;font-size:14px;text-align:center;border-radius:9px;padding:5px 0;line-height:1.1}
+.chip small{display:block;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.chip-ba{background:var(--ba-bg);color:var(--ba)}.chip-hr{background:var(--hr-bg);color:var(--hr)}.chip-cn{background:var(--cn-bg);color:var(--cn)}
+.chip-global{background:var(--global-bg);color:var(--global)}.chip-faith{background:var(--faith-bg);color:var(--faith)}
+.chip-deadline{background:var(--warn-bg);color:var(--warn)}
+.list b{display:block}
+.why{display:block;font-size:12.5px;color:var(--muted)}
+.tagline{display:inline-block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:6px}
+.note{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.day-detail[hidden]{display:none}
+.cell[role="button"]{cursor:pointer}
+.cell[role="button"]:focus-visible{outline:2px solid var(--blue-d);outline-offset:1px}

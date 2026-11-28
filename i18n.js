@@ -85,6 +85,7 @@ const D = {
   "vodic.watch": ["Watch the video", "Pogledaj video", "Pogledaj video", "Pogledaj video"],
   "vodic.dismiss": ["Don't show again", "Ne prikazuj više", "Ne prikazuj više", "Ne prikazuj više"],
   "app.vodic": ["Video guide", "Video vodič", "Video vodič", "Video vodič"],
+  "app.praznici": ["Holidays & deadlines", "Kalendar", "Kalendar", "Kalendar"],
   "app.logistika": ["Logistics", "Logistika", "Logistika", "Logistika"],
   "app.posiljke": ["Shipments", "Pošiljke", "Pošiljke", "Pošiljke"],
   "app.ture": ["Trips", "Ture", "Ture", "Ture"],
